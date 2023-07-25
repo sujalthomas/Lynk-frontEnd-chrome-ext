@@ -1,0 +1,78 @@
+/* Add any other specific styles for elements inside your popup box here */
+
+.popup-container {
+  padding: 1rem;
+  background-color: black;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.label {
+  font-size: 0.9rem;
+  color: #FEFBEA;
+  font-weight: 500;
+}
+
+.icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+}
+
+.input {
+  width: 268px;
+  padding: 0.5rem;
+  border: 1px solid #bdc3c7;
+  border-radius: 4px;
+  color: #34495e;
+  background-color: #FEFBEA;
+}
+
+.input.success {
+  border-color: #27ae60;
+}
+
+.label_mt-4 {
+  color: #FEFBEA;
+  font-size: 0.9rem;
+}
+
+.input.error {
+  border-color: #e74c3c;
+}
+
+.input-file {
+  width: 100%;
+  padding: 0.1rem;
+  margin-top: 0.5rem;
+  cursor: pointer;
+  color: #FEFBEA;
+
+}
+
+.text-success {
+  color: #27ae60;
+  font-size: 0.8rem;
+}
+
+.text-error {
+  color: #e74c3c;
+  font-size: 0.8rem;
+}
+
+.text-help {
+  color: black;
+  font-size: 0.8rem;
+  margin-top: 0.4rem;
+  padding-bottom: 0rem;
+  color: #FEFBEA;
+}
+
+.resume-upload-container {
+  padding-top: 1rem;
+}

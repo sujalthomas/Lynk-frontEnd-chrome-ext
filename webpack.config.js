@@ -109,7 +109,6 @@ var options = {
       },
       {
         test: /\.(js|jsx)$/,
-        exclude: /node_modules/,
         use: [
           {
             loader: 'source-map-loader',
@@ -117,13 +116,13 @@ var options = {
           {
             loader: require.resolve('babel-loader'),
             options: {
-              presets: ['@babel/preset-env', '@babel/preset-react'], // <-- Added React preset here
               plugins: [
                 isDevelopment && require.resolve('react-refresh/babel'),
               ].filter(Boolean),
             },
           },
         ],
+        exclude: /node_modules/,
       },
     ],
   },
@@ -134,7 +133,7 @@ var options = {
       .concat(['.js', '.jsx', '.ts', '.tsx', '.css']),
   },
   plugins: [
-    isDevelopment && new ReactRefreshWebpackPlugin({ overlay: false }),
+    isDevelopment && new ReactRefreshWebpackPlugin(),
     new CleanWebpackPlugin({ verbose: false }),
     new webpack.ProgressPlugin(),
     // expose and write the allowed env vars on the compiled bundle
@@ -180,6 +179,15 @@ var options = {
       patterns: [
         {
           from: 'src/assets/img/icon-34.png',
+          to: path.join(__dirname, 'build'),
+          force: true,
+        },
+      ],
+    }),
+    new CopyWebpackPlugin({
+      patterns: [
+        {
+          from: 'src/pages/Popup/globe.png',
           to: path.join(__dirname, 'build'),
           force: true,
         },

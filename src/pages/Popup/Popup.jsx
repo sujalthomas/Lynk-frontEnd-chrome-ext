@@ -1,50 +1,78 @@
-// path: src/pages/Content/index.js
+import React, { useState, useEffect } from 'react';
+import './Popup.css';
+import globeImg from './globe.png'; // Correct way to import image
 
-// Create a button element
-const button = document.createElement('div');
-button.style.position = 'fixed';
-button.style.top = '50%';
-button.style.right = '0';
-button.style.transform = 'translateY(-50%)';
-button.style.backgroundColor = 'violet';
-button.style.width = '50px';
-button.style.height = '50px';
-button.style.borderRadius = '50%';
-button.style.zIndex = '9999';
-button.style.transition = 'width 0.3s'; // Add transition effect for smooth expansion
-button.style.display = 'flex'; // Use flex to center the text inside the button
-button.style.justifyContent = 'center';
-button.style.alignItems = 'center';
-button.style.overflow = 'hidden'; // Make sure the text is hidden until the button is expanded
+const Popup = () => {
+  const [apiKey, setApiKey] = useState('');
+  const [isValid, setIsValid] = useState(null);
 
-// Append the button to the body
-document.body.appendChild(button);
+  const validateApiKeyFormat = (key) => {
+    return /^sk-[a-zA-Z0-9]{32,}$/.test(key);
+  };
 
-// Add click event listener to the button
-button.addEventListener('click', expandButton);
+  useEffect(() => {
+    chrome.storage.local.get(['apiKey'], result => {
+      if (result.apiKey) {
+        setApiKey(result.apiKey);
+      }
+    });
+  }, []);
 
-// Function to expand the button
-function expandButton() {
-  button.style.width = '200px'; // Adjust as needed to fit your text
-  button.innerHTML = '<span style="color:white">Generate Cover Letter</span>'; // Add your text
-}
+  useEffect(() => {
+    if (apiKey === '') {
+      setIsValid(null);
+    } else {
+      setIsValid(validateApiKeyFormat(apiKey));
+      chrome.storage.local.set({ apiKey: apiKey }).then(() => {
+        console.log('API key is stored in chrome storage.');
+      });
+    }
+  }, [apiKey]);
 
-// Listen for changes in the URL
-const observer = new MutationObserver(() => {
-  const linkedinLink = document.querySelector(
-    'a[href^="https://www.linkedin.com"]'
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64string = reader.result;
+        chrome.storage.local.set({ resumeFile: base64string }, () => {
+          console.log('Resume file is stored in chrome storage.');
+        });
+      };
+      reader.readAsDataURL(e.target.files[0]);
+    }
+  };
+
+  return (
+    <div className="popup-container">
+      <div className="header">
+        <label className="label" htmlFor="api-key">Lynk Chrome Extension</label>
+        <a href="https://www.example.com" target="_blank" rel="noopener noreferrer">
+          <img src={globeImg} className="icon" alt="external-link" />
+        </a>
+      </div>
+      <input
+        type="text"
+        id="api-key"
+        className={`input ${isValid === true ? 'success' : isValid === false ? 'error' : 'neutral'}`}
+        placeholder="Enter API Key"
+        value={apiKey}
+        onChange={(e) => setApiKey(e.target.value)}
+      />
+      {isValid === true && <p className="text-success">Well done! Your API key format is valid.</p>}
+      {isValid === false && <p className="text-error">Oh, snap! Your API key format is not valid.</p>}
+      <div className="resume-upload-container">
+        <label className="label_mt-4" htmlFor="file_input">Upload Your Resume</label>
+        <input
+          className="input-file"
+          aria-describedby="file_input_help"
+          id="file_input"
+          type="file"
+          onChange={handleFileChange}
+        />
+        <p className="text-help"> pdf, docx or txt (max 5 mb ) </p>
+      </div>
+    </div>
   );
+};
 
-  // Display or hide the button based on the presence of a LinkedIn link
-  if (linkedinLink) {
-    button.style.display = 'block';
-  } else {
-    button.style.display = 'none';
-  }
-});
-
-// Observe changes to the document
-observer.observe(document.documentElement, {
-  childList: true,
-  subtree: true,
-});
+export default Popup;
