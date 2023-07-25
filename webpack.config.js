@@ -109,6 +109,7 @@ var options = {
       },
       {
         test: /\.(js|jsx)$/,
+        exclude: /node_modules/,
         use: [
           {
             loader: 'source-map-loader',
@@ -116,13 +117,13 @@ var options = {
           {
             loader: require.resolve('babel-loader'),
             options: {
+              presets: ['@babel/preset-env', '@babel/preset-react'], // <-- Added React preset here
               plugins: [
                 isDevelopment && require.resolve('react-refresh/babel'),
               ].filter(Boolean),
             },
           },
         ],
-        exclude: /node_modules/,
       },
     ],
   },
