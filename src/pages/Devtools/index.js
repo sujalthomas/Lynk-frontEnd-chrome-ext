@@ -3,3 +3,8 @@ chrome.devtools.panels.create(
   'icon-34.png',
   'panel.html'
 );
+
+
+chrome.storage.sync.get(['apiKey'], function (result) {
+  console.log(result.apiKey);
+});

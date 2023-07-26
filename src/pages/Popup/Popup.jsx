@@ -5,18 +5,69 @@ import globeImg from './globe.png'; // Correct way to import image
 const Popup = () => {
   const [apiKey, setApiKey] = useState('');
   const [isValid, setIsValid] = useState(null);
+  const [isKeyHidden, setIsKeyHidden] = useState(true);
+  
 
   const validateApiKeyFormat = (key) => {
     return /^sk-[a-zA-Z0-9]{32,}$/.test(key);
   };
 
+  const handleFileUpload = async (file) => {
+    const formData = new FormData();
+    formData.append('resume', file);
+
+    try {
+      const response = await fetch('http://127.0.0.1:3000/upload-resume', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        console.log('Resume uploaded successfully');
+      } else {
+        console.error('Failed to upload resume:', data.message);
+      }
+    } catch (error) {
+      console.error('Error uploading file:', error);
+    }
+  };
+
+
+  const handleGlobeClick = async (e) => {
+    e.preventDefault();
+    // In the authentication request:
+    const authResponse = await fetch('http://127.0.0.1:3000/authenticate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ apiKey: apiKey }), // Use apiKey here
+      credentials: 'include'
+    });
+
+    if (authResponse.ok) {
+      const data = await authResponse.json();
+      const token = data.token;
+      await chrome.storage.local.set({ token: token });
+      alert('Successfully authenticated!');
+    } else {
+      alert('Failed to authenticate.');
+    }
+
+
+  };
+
+
   useEffect(() => {
-    chrome.storage.local.get(['apiKey'], result => {
+    chrome.storage.local.get(['apiKey', 'token'], result => {
       if (result.apiKey) {
         setApiKey(result.apiKey);
       }
+      // No need to store token in a state variable for now, but you can if you need to use it elsewhere in this component.
     });
   }, []);
+
 
   useEffect(() => {
     if (apiKey === '') {
@@ -31,33 +82,39 @@ const Popup = () => {
 
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files.length > 0) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64string = reader.result;
-        chrome.storage.local.set({ resumeFile: base64string }, () => {
-          console.log('Resume file is stored in chrome storage.');
-        });
-      };
-      reader.readAsDataURL(e.target.files[0]);
+      const file = e.target.files[0];
+      if (file.size <= 5 * 1024 * 1024) { // 5MB in bytes
+        handleFileUpload(file);
+      } else {
+        console.error('File is too large');
+      }
     }
   };
+
 
   return (
     <div className="popup-container">
       <div className="header">
         <label className="label" htmlFor="api-key">Lynk Chrome Extension</label>
-        <a href="https://www.example.com" target="_blank" rel="noopener noreferrer">
+        <a href="#" onClick={handleGlobeClick}>
           <img src={globeImg} className="icon" alt="external-link" />
         </a>
       </div>
-      <input
-        type="text"
-        id="api-key"
-        className={`input ${isValid === true ? 'success' : isValid === false ? 'error' : 'neutral'}`}
-        placeholder="Enter API Key"
-        value={apiKey}
-        onChange={(e) => setApiKey(e.target.value)}
-      />
+
+      <div className="api-input-container">
+        <input
+          type={isKeyHidden ? "password" : "text"} // This line toggles the visibility
+          id="api-key"
+          className={`input ${isValid === true ? 'success' : isValid === false ? 'error' : 'neutral'}`}
+          placeholder="Enter API Key"
+          value={apiKey}
+          onChange={(e) => setApiKey(e.target.value)}
+        />
+        <button onClick={() => setIsKeyHidden(!isKeyHidden)}>
+          {isKeyHidden ? "Show" : "Hide"}
+        </button>
+      </div>
+
       {isValid === true && <p className="text-success">Well done! Your API key format is valid.</p>}
       {isValid === false && <p className="text-error">Oh, snap! Your API key format is not valid.</p>}
       <div className="resume-upload-container">
@@ -74,5 +131,6 @@ const Popup = () => {
     </div>
   );
 };
+
 
 export default Popup;
