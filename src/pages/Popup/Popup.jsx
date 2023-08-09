@@ -12,6 +12,12 @@ const Popup = () => {
     setShowPassword(!showPassword);
   };
 
+  const fileInputRef = React.useRef(null);
+
+  const handleButtonClick = () => {
+    fileInputRef.current.click(); // Trigger the hidden file input
+  };
+
   const LockIcon = () => (
     <svg viewBox="97 6 809 988" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink">
       <g fill="#5e5bc2">
@@ -162,19 +168,30 @@ const Popup = () => {
       {isValid === false && <p className="text-error">Oh, snap! Your API key format is not valid.</p>}
 
       <div className="resume-upload-container">
-        <label className="label_mt-4" htmlFor="file_input">Upload Your Resume</label>
         <input
+          ref={fileInputRef}
           className="input-file"
           aria-describedby="file_input_help"
           id="file_input"
           type="file"
           onChange={handleFileChange}
+          style={{ display: 'none' }} // Hide the input element
         />
+        <button className="btn" type="button" onClick={handleButtonClick}>
+          <strong>Upload Resume</strong>
+          <div id="container-stars">
+            <div id="stars"></div>
+          </div>
+          <div id="glow">
+            <div className="circle"></div>
+            <div className="circle"></div>
+          </div>
+        </button>
         <p className="text-help"> pdf, docx or txt (max 5 mb ) </p>
+
       </div>
     </div>
   );
 };
-
 
 export default Popup;
