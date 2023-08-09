@@ -1,0 +1,161 @@
+$spacing_x: 10px;
+$eye_w: 20px;
+$eye_h: 27px;
+$lock_w: 20px;
+$lock_h: 27px;
+$transiton_bg_w: 30px;
+$color: #5E5BC2;
+$border_r: 10px;
+
+/* resets */
+body,
+div,
+input,
+h2 {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+h2 {
+  font-size: 14px;
+  margin-bottom: 5px;
+}
+
+p {
+  font-size: 10px;
+  margin-bottom: 5px;
+}
+
+/* input style */
+.form-group {
+  position: relative;
+  width: 300px;
+  height: 40px;
+}
+
+.form-control-lg {
+  position: absolute;
+  width: 100%;
+  padding-right: 30px;
+  /* Add padding to create space for the eye icon */
+  height: 100%;
+  padding-left: calc(#{$spacing_x} + #{$lock_w}); // Adjusted padding to make room for the lock icon
+  border: none;
+  border-radius: $border_r;
+  font-size: 18px;
+  line-height: 100%;
+  letter-spacing: 6px;
+  background: #121725;
+  color: $color;
+}
+
+
+.form-control-black {
+  background: #121725;
+  color: $color;
+}
+
+/* icons and transition background */
+.transition-container {
+  position: relative;
+  /* set duration in ms, js uses it */
+  --duration: 200ms;
+}
+
+#eye
+/* update eye svg durations if necessary */
+/* default .2s and .2s
+    /* --duration-blink: var(--duration) */
+/*--duration-lashes: .1s*/
+
+.icon-lock {
+  width: $lock_w;
+  height: $lock_h;
+  position: absolute;
+  left: $spacing_x;
+  top: 50%;
+  transform: translateY(-50%);
+  color: white;
+  fill: white; // Add this if the SVG color isn't being applied
+}
+
+.icon-eye {
+  width: $eye_w;
+  height: $eye_h;
+  position: absolute;
+  right: $spacing_x;
+  top: 50%;
+  transform: translateY(-50%);
+  color: $color;
+
+  &:hover {
+    cursor: pointer;
+  }
+
+
+  .transition-bg {
+    width: $transiton_bg_w;
+    height: $transiton_bg_w;
+    position: absolute;
+    right: $spacing_x;
+    top: 50%;
+    transform: translateY(-50%);
+    background: white;
+    border-radius: 50%;
+    transform-origin: right center;
+  }
+
+  .icon-eye,
+  .icon-lock {
+    width: 20px;
+    height: 27px;
+  }
+
+  .transition-bg {
+    transition: all var(--duration, 200ms) ease-in, border-radius .1s var(--duration, 200ms) ease-in
+  }
+
+  /* show pasword state */
+  .js-show-pw {
+    .transition-bg {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      top: 0;
+      right: 0;
+      border-radius: $border_r;
+      transition: all var(--duration, 200ms) ease-in, border-radius .1s ease-in;
+    }
+
+    .icon-lock {
+      color: #1A1C2D;
+    }
+
+    .icon-lock,
+    .icon-eye {
+      z-index: 1;
+    }
+  }
+
+  /* show input when show pasword status */
+  .show-input {
+    z-index: 1;
+    background: white;
+    letter-spacing: 5px;
+  }
+
+  /* utility classes */
+  .flex-center {
+    display: flex;
+    align-items: center;
+    justify-content: center
+  }
+
+  /* complementary styles */
+  .wrapper {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+}

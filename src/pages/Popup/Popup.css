@@ -14,7 +14,7 @@
 
 .label {
   font-size: 0.9rem;
-  color: #FEFBEA;
+  color: #5e5bc2;
   font-weight: 500;
 }
 
@@ -38,7 +38,7 @@
 }
 
 .label_mt-4 {
-  color: #FEFBEA;
+  color: #5e5bc2;
   font-size: 0.9rem;
 }
 
@@ -51,7 +51,7 @@
   padding: 0.1rem;
   margin-top: 0.5rem;
   cursor: pointer;
-  color: #FEFBEA;
+  color: #5e5bc2;
 
 }
 
@@ -70,7 +70,7 @@
   font-size: 0.8rem;
   margin-top: 0.4rem;
   padding-bottom: 0rem;
-  color: #FEFBEA;
+  color: #5e5bc2;
 }
 
 .resume-upload-container {
