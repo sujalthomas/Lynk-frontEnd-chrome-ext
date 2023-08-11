@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import './Newtab.css';
-import './Newtab.scss';
 
 const Newtab = () => {
   const [isFlipped, setIsFlipped] = useState(false);

@@ -221,7 +221,7 @@
   height: 40px;
   border-radius: 5px;
   border: 2px solid var(--main-color);
-  background-color: var(--bg-color);
+  background-color: white;
   box-shadow: 4px 4px var(--main-color);
   font-size: 17px;
   font-weight: 600;
