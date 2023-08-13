@@ -1,8 +1,14 @@
 import React, { useState } from 'react';
+
 import './Newtab.css';
 
 const Newtab = () => {
   const [isFlipped, setIsFlipped] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+  const [message, setMessage] = useState(''); // Add a state variable for messages
+
 
   function handleCardFlip() {
     setIsFlipped(!isFlipped);
@@ -12,6 +18,57 @@ const Newtab = () => {
     e.stopPropagation();
     // Your logic for handling the button click, such as signing in with Apple or Google
   }
+
+  async function handleRegistration() {
+    try {
+      const response = await fetch('http://127.0.0.1:3000/authenticate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name, email, password }), // Include name in the request body
+      });
+      const data = await response.json();
+      if (data.success) {
+        setMessage('Login successful!');
+        localStorage.setItem('authToken', data.token);
+        //navigate('/dashboard'); // Redirect to the dashboard or other page
+        //test for now w google
+        chrome.tabs.create({ url: 'https://www.google.com' });
+      } else {
+        setMessage('Login failed: ' + data.message);
+      }
+    } catch (error) {
+      setMessage('An error occurred: ' + error.message);
+    }
+  }
+
+
+  const handleLogin = async () => {
+    try {
+      const response = await fetch('http://127.0.0.1:3000/authenticate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setMessage('Login successful!');
+        localStorage.setItem('authToken', data.token);
+        //navigate('/dashboard'); // Redirect to the dashboard or other page
+        //test for now w google
+        chrome.tabs.create({ url: 'https://www.google.com' });
+      } else {
+        setMessage('Login failed: ' + data.message);
+      }
+    } catch (error) {
+      setMessage('An error occurred: ' + error.message);
+    }
+  };
+
 
   return (
     <div className="wrapper">
@@ -23,9 +80,8 @@ const Newtab = () => {
             <div className="flip-card__front">
               <div className="title">Lynk</div>
               <form action="" className="flip-card__form">
-                <input type="email" placeholder="Email" name="email" className="flip-card__input" />
-                <input type="password" placeholder="Password" name="password" className="flip-card__input" />
-                <div className="forgot">
+                <input type="email" placeholder="Email" name="email" className="flip-card__input" value={email} onChange={(e) => setEmail(e.target.value)} />
+                <input type="password" placeholder="Password" name="password" className="flip-card__input" value={password} onChange={(e) => setPassword(e.target.value)} /><div className="forgot">
                   <span> Forgot password?
                     <a href="https://www.google.com"> Reset here!</a>
                   </span>
@@ -65,17 +121,16 @@ const Newtab = () => {
                   </div>
                 </div>
                 <div className="new">
-                  <button className="flip-card__btn">Login!</button>
+                  <button className="flip-card__btn" onSubmit={handleLogin}>Login!</button> {/* Fix onClick */}
                 </div>
               </form>
             </div>
             <div className="flip-card__back">
               <div className="title">Sign up</div>
               <form action="" className="flip-card__form">
-                <input type="name" placeholder="Name" className="flip-card__input" />
-                <input type="email" placeholder="Email" name="email" className="flip-card__input" />
-                <input type="password" placeholder="Password" name="password" className="flip-card__input" />
-                <div className="separator">
+                <input type="text" placeholder="Name" className="flip-card__input" value={name} onChange={(e) => setName(e.target.value)} />
+                <input type="email" placeholder="Email" name="email" className="flip-card__input" value={email} onChange={(e) => setEmail(e.target.value)} />
+                <input type="password" placeholder="Password" name="password" className="flip-card__input" value={password} onChange={(e) => setPassword(e.target.value)} /><div className="separator">
                   <div></div>
                   <span>OR</span>
                   <div></div>
@@ -109,7 +164,7 @@ const Newtab = () => {
 
                   </div>
                 </div>
-                <button className="flip-card__btn">Confirm!</button>
+                <button className="flip-card__btn" onSubmit={handleRegistration}>Confirm!</button> {/* Fix onClick */}
               </form>
             </div>
           </div>

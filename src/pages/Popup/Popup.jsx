@@ -83,7 +83,7 @@ const Popup = () => {
   const handleGlobeClick = async (e) => {
     e.preventDefault();
     // In the authentication request:
-    const authResponse = await fetch('http://127.0.0.1:3000/authenticate', {
+    const authResponse = await fetch('http://127.0.0.1:3000/apiverify', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
