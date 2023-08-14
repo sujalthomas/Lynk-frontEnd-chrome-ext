@@ -19,22 +19,26 @@ const Newtab = () => {
     // Your logic for handling the button click, such as signing in with Apple or Google
   }
 
-  async function handleRegistration() {
+  async function handleRegistration(e) {
+    e.preventDefault(); // Prevent default behavior
     try {
       const response = await fetch('http://127.0.0.1:3000/authenticate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ name, email, password }), // Include name in the request body
+        body: JSON.stringify({ action: 'register', name, email, password }),
       });
       const data = await response.json();
       if (data.success) {
         setMessage('Login successful!');
         localStorage.setItem('authToken', data.token);
         //navigate('/dashboard'); // Redirect to the dashboard or other page
+        // After successful registration
+        window.location.reload();
+
         //test for now w google
-        chrome.tabs.create({ url: 'https://www.google.com' });
+        //chrome.tabs.create({ url: 'https://www.google.com' });
       } else {
         setMessage('Login failed: ' + data.message);
       }
@@ -44,14 +48,15 @@ const Newtab = () => {
   }
 
 
-  const handleLogin = async () => {
+  async function handleLogin(e) {
+    e.preventDefault(); // Prevent default behavior
     try {
       const response = await fetch('http://127.0.0.1:3000/authenticate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ action: 'login', email, password }),
       });
 
       const data = await response.json();
@@ -59,8 +64,13 @@ const Newtab = () => {
         setMessage('Login successful!');
         localStorage.setItem('authToken', data.token);
         //navigate('/dashboard'); // Redirect to the dashboard or other page
+        // after successful login, close the current tab
+        chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+          chrome.tabs.remove(tabs[0].id);
+        });
+
         //test for now w google
-        chrome.tabs.create({ url: 'https://www.google.com' });
+        //chrome.tabs.create({ url: 'https://www.google.com' });
       } else {
         setMessage('Login failed: ' + data.message);
       }
@@ -121,7 +131,7 @@ const Newtab = () => {
                   </div>
                 </div>
                 <div className="new">
-                  <button className="flip-card__btn" onSubmit={handleLogin}>Login!</button> {/* Fix onClick */}
+                  <button className="flip-card__btn" onClick={handleLogin}>Login!</button>
                 </div>
               </form>
             </div>
@@ -164,7 +174,7 @@ const Newtab = () => {
 
                   </div>
                 </div>
-                <button className="flip-card__btn" onSubmit={handleRegistration}>Confirm!</button> {/* Fix onClick */}
+                <button className="flip-card__btn" onClick={handleRegistration}>Confirm!</button>
               </form>
             </div>
           </div>
