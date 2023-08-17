@@ -5,12 +5,14 @@ import { BrowserRouter as Router, Route } from 'react-router-dom';
 
 import Newtab from './Newtab';
 import './index.css';
+import Options from '../Options/Options';
 
 const App = () => {
     return (
       <Router>
         <Route path="/" exact component={Newtab} />
         {/* other routes if needed */}
+        {/*<Route path="/" exact component={Options} />*/}
       </Router>
     );
   };

@@ -83,6 +83,7 @@
   font-weight: 600;
 }
 
+
 .card-side::before {
   position: absolute;
   width: 100px;
@@ -293,10 +294,9 @@
   font-weight: 900;
   text-align: center;
   color: #5E5BC2;
-
-
-
 }
+
+
 
 .forgot a {
   color: #5E5BC2;

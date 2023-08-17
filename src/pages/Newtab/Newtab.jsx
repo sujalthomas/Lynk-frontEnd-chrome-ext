@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-
 import './Newtab.css';
 
 const Newtab = () => {
@@ -17,6 +16,18 @@ const Newtab = () => {
   function handleButtonClick(e) {
     e.stopPropagation();
     // Your logic for handling the button click, such as signing in with Apple or Google
+  }
+
+  // Added function to show the login view
+  function showLoginForm() {
+    setShowPasswordReset(false);
+    setIsFlipped(false);
+  }
+
+  // Added function to show the registration view
+  function showRegistrationForm() {
+    setShowPasswordReset(false);
+    setIsFlipped(true);
   }
 
   async function handleRegistration(e) {
@@ -62,7 +73,9 @@ const Newtab = () => {
       const data = await response.json();
       if (data.success) {
         setMessage('Login successful!');
-        localStorage.setItem('authToken', data.token);
+        //chrome.storage.local.set({ authToken: data.token });
+        //use this for now
+        chrome.storage.local.set({ authToken: data.token });
         //navigate('/dashboard'); // Redirect to the dashboard or other page
         // after successful login, close the current tab
         chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
@@ -101,7 +114,6 @@ const Newtab = () => {
     }
   }
 
-
   async function handlePasswordResetWithToken(e, token, newPassword) {
     e.preventDefault();
     try {
@@ -129,8 +141,6 @@ const Newtab = () => {
     setShowPasswordReset(prevState => !prevState);
   }
 
-
-
   return (
     <div className="wrapper">
       <div className={`card-switch ${isFlipped ? 'flipped' : ''}`}>
@@ -145,10 +155,9 @@ const Newtab = () => {
                   <form action="" className="flip-card__form">
                     <input type="email" placeholder="Email" name="email" className="flip-card__input" value={email} onChange={(e) => setEmail(e.target.value)} />
                     <div className="forgot">
-                      <button onClick={handlePasswordResetRequest}>Reset Password</button>
+                    <button className="flip-card__btn" onClick={handlePasswordResetRequest}>Reset Password</button>
                     </div>
                   </form>
-                  <button onClick={() => setShowPasswordReset(false)}>Go back to Login</button>
                 </div>
               ) : (
                 <>

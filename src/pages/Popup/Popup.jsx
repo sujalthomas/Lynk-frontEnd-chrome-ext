@@ -2,11 +2,14 @@ import React, { useState, useEffect } from 'react';
 import './Popup.css';
 import './Popup.scss';
 import globeImg from './globe.png'; // Correct way to import image
+import logo from '../../assets/img/icon-128.png';
 
 const Popup = () => {
   const [apiKey, setApiKey] = useState('');
   const [isValid, setIsValid] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
+
+
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -58,9 +61,22 @@ const Popup = () => {
     return /^sk-[a-zA-Z0-9]{32,}$/.test(key);
   };
 
+  const [uploadedResume, setUploadedResume] = useState('');
+
   const handleFileUpload = async (file) => {
     const formData = new FormData();
     formData.append('resume', file);
+
+    // Read the content of the uploaded file
+    const fileContent = await file.text();
+    setUploadedResume(fileContent);
+
+    // Send the content to the content script
+    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+      chrome.tabs.sendMessage(tabs[0].id, { type: "uploadedResume", content: fileContent }, function (response) {
+        console.log(response.message);
+      });
+    });
 
     try {
       const response = await fetch('http://127.0.0.1:3000/upload-resume', {
@@ -96,14 +112,13 @@ const Popup = () => {
       const data = await authResponse.json();
       const token = data.token;
       await chrome.storage.local.set({ token: token });
-      alert('Successfully authenticated!');
+      alert('Lynk & GPT-4 successfully connected!');
     } else {
       alert('Failed to authenticate.');
     }
 
 
   };
-
 
   useEffect(() => {
     chrome.storage.local.get(['apiKey', 'token'], result => {
@@ -137,60 +152,93 @@ const Popup = () => {
     }
   };
 
+  //auth to send to other tabs 
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    chrome.storage.local.get('authToken', (result) => {
+      if (result.authToken) {
+        setIsAuthenticated(true);
+      }
+      else {
+        setIsAuthenticated(false);
+      }
+    });
+  }, []);
+
+  const handleLoginClick = () => {
+    chrome.tabs.create({ url: 'newtab.html' });
+  };
 
   return (
-    <div className="popup-container">
-      <div className="header">
-        <label className="label" htmlFor="api-key">Lynk Chrome Extension</label>
-        <a href="#" onClick={handleGlobeClick}>
-          <img src={globeImg} className="icon" alt="external-link" />
-        </a>
+    isAuthenticated ? (
+      <div className="popup-container">
+        <div className="header">
+          <label className="label" htmlFor="api-key">Lynk Chrome Extension</label>
+          <a href="#" onClick={handleGlobeClick}>
+            <img src={globeImg} className="icon" alt="external-link" />
+          </a>
+        </div>
+
+        <div className={`form-group transition-container ${showPassword ? 'js-show-pw eye-open' : 'eye-close'}`}>
+          <input
+            type={showPassword ? "text" : "password"}
+            value={apiKey}
+            onChange={(e) => setApiKey(e.target.value)}
+            className={`form-control-lg form-control-black transition-input ${showPassword ? "show-input" : ""} ${isValid === true ? 'success' : isValid === false ? 'error' : 'neutral'}`}
+            placeholder="OpenAI API Key" // Adding the placeholder attribute here
+          />
+          {/* Lock and Eye icons */}
+          <span className="icon-lock" style={{ position: 'absolute', left: '8px', top: '55%', transform: 'translateY(-50%)', width: '15px', height: '21px', fill: '#5e5bc2' }}>
+            <LockIcon />
+          </span>
+          <span className="icon-eye middle-right js-transition" onClick={togglePasswordVisibility}>
+            <EyeIcon />
+          </span>
+        </div>
+
+        {isValid === true && <p className="text-success">Well done! Your API key format is valid.</p>}
+        {isValid === false && <p className="text-error">Oh, snap! Your API key format is not valid.</p>}
+
+        <div className="resume-upload-container">
+          <input
+            ref={fileInputRef}
+            className="input-file"
+            aria-describedby="file_input_help"
+            id="file_input"
+            type="file"
+            onChange={handleFileChange}
+            style={{ display: 'none' }} // Hide the input element
+          />
+          <button className="btn" type="button" onClick={handleButtonClick}>
+            <strong>Upload Resume</strong>
+            <div id="container-stars">
+              <div id="stars"></div>
+            </div>
+            <div id="glow">
+              <div className="circle"></div>
+              <div className="circle"></div>
+            </div>
+          </button>
+          <p className="text-help"> pdf, docx or txt (max 5 mb ) </p>
+
+        </div>
       </div>
-
-      <div className={`form-group transition-container ${showPassword ? 'js-show-pw eye-open' : 'eye-close'}`}>
-        <input
-          type={showPassword ? "text" : "password"}
-          value={apiKey}
-          onChange={(e) => setApiKey(e.target.value)}
-          className={`form-control-lg form-control-black transition-input ${showPassword ? "show-input" : ""} ${isValid === true ? 'success' : isValid === false ? 'error' : 'neutral'}`}
-          placeholder="OpenAI API Key" // Adding the placeholder attribute here
-        />
-        {/* Lock and Eye icons */}
-        <span className="icon-lock" style={{ position: 'absolute', left: '8px', top: '55%', transform: 'translateY(-50%)', width: '15px', height: '21px', fill: '#5e5bc2' }}>
-          <LockIcon />
-        </span>
-        <span className="icon-eye middle-right js-transition" onClick={togglePasswordVisibility}>
-          <EyeIcon />
-        </span>
-      </div>
-
-      {isValid === true && <p className="text-success">Well done! Your API key format is valid.</p>}
-      {isValid === false && <p className="text-error">Oh, snap! Your API key format is not valid.</p>}
-
-      <div className="resume-upload-container">
-        <input
-          ref={fileInputRef}
-          className="input-file"
-          aria-describedby="file_input_help"
-          id="file_input"
-          type="file"
-          onChange={handleFileChange}
-          style={{ display: 'none' }} // Hide the input element
-        />
-        <button className="btn" type="button" onClick={handleButtonClick}>
-          <strong>Upload Resume</strong>
-          <div id="container-stars">
-            <div id="stars"></div>
+    ) : (
+      // JSX for unauthenticated user (i.e., the form)
+      <form className="form">
+        <div className="title">
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            Lynk Tools,
+            <img src={logo} className="logo" alt="external-link" />
           </div>
-          <div id="glow">
-            <div className="circle"></div>
-            <div className="circle"></div>
-          </div>
-        </button>
-        <p className="text-help"> pdf, docx or txt (max 5 mb ) </p>
 
-      </div>
-    </div>
+        </div>
+        <div className="meow">Login / Sign up to continue</div>
+        <button className="flip-card__btn" onClick={handleLoginClick}>Login →</button>
+      </form>
+
+    )
   );
 };
 

@@ -12,6 +12,15 @@
   margin-bottom: 0.5rem;
 }
 
+.logo {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  margin-right: 0.5rem;
+  padding-left: 35px;
+}
+
+
 .label {
   font-size: 0.9rem;
   color: #5e5bc2;
@@ -246,4 +255,87 @@ strong {
     transform: scale(0.75);
     box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
   }
+}
+
+.form {
+  --input-focus: #2d8cf0;
+  --font-color: #323232;
+  --font-color-sub: #666;
+  --bg-color: #fff;
+  --main-color: #5E5BC2;
+  padding: 20px;
+  background: rgba(17, 24, 39, 1);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 20px;
+  border-radius: 5px;
+  border: 2px solid var(--main-color);
+  box-shadow: 4px 4px var(--main-color);
+}
+
+.title {
+  color: white;
+  display: flex;
+  align-items: center; /* this will vertically center the items */
+  font-weight: 900;
+  font-size: 20px;
+  margin-bottom: 25px;
+  text-shadow: 0 0 15px rgba(255,255,255,.5), 0 0 10px rgba(255,255,255,.5), 2px 2px 2px rgba(17,24,39,0);
+}
+
+.flip-card__btn-link{
+  text-decoration: none;
+}
+
+.meow {
+  color: #5E5BC2;
+  font-weight: 100;
+  font-size: 17px;
+}
+
+.flip-card__btn {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  padding: auto 15px 15px auto;
+  margin: 20px 0 20px 0;
+  width: 260px;
+  height: 40px;
+  border-radius: 5px;
+  border: 2px solid var(--main-color);
+  background-color: var(--bg-color);
+  box-shadow: 4px 4px var(--main-color);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--font-color);
+  cursor: pointer;
+  transition: all 250ms;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+} 
+
+.flip-card__btn::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 0;
+  background-color: #5E5BC2;
+  z-index: -1;
+  -webkit-box-shadow: 4px 8px 19px -3px rgba(0, 0, 0, 0.27);
+  box-shadow: 4px 8px 19px -3px rgba(0, 0, 0, 0.27);
+  transition: all 250ms;
+}
+
+.flip-card__btn:hover {
+  color: #e8e8e8;
+}
+
+.flip-card__btn:hover::before {
+  width: 100%;
 }

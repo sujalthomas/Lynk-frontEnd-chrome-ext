@@ -1,1 +1,1 @@
-console.log("This is the background page."),console.log("Put the background scripts here.");
+console.log("This is the background page."),chrome.runtime.onInstalled.addListener((function(e){if("install"==e.reason){const e=`chrome-extension://${chrome.runtime.id}/newtab.html`;chrome.tabs.create({url:e})}else e.reason})),chrome.runtime.onMessage.addListener((function(e,n,t){if("openNewTab"==e.action)return chrome.tabs.create({url:"newtab.html"},(function(e){chrome.runtime.lastError?t({message:"Failed to open new tab."}):t({message:"New tab opened."})})),!0}));

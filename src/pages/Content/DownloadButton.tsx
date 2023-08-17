@@ -45,11 +45,95 @@ const DownloadButton = () => {
     return tempDiv.textContent || tempDiv.innerText || "";
   }
 
-  const handleGithubClick = () => {
-    // Function for GitHub button (empty for now)
+  let uploadedResume = "";
+
+  chrome.runtime.onMessage.addListener(
+    function (request, sender, sendResponse) {
+      if (request.type === "uploadedResume") {
+        uploadedResume = request.content;
+        sendResponse({ message: "Resume content received" });
+      }
+    }
+  );
+
+
+  const handleResumeDownload = async () => {
+    setIsLoading(true);
+
+    // Promisified version of chrome.storage.sync.get
+    const getFromStorage = (key: string): Promise<string> => {
+      return new Promise((resolve, reject) => {
+        chrome.storage.local.get([key], (result) => {
+          if (chrome.runtime.lastError) {
+            reject(new Error(chrome.runtime.lastError.message));
+          } else {
+            resolve(result[key]);
+          }
+        });
+      });
+    };
+
+    // Fetch token
+    const token = await getFromStorage('token');
+    // Fetch API key from chrome storage
+    const storedApiKey = await getFromStorage('apiKey');
+
+    if (!token) {
+      console.error("Token not found in storage.");
+      setIsLoading(false);
+      return;
+    }
+
+    if (uploadedResume && jobBodyRef.current) {
+      const jobBodyElem = sanitizeHTML(jobBodyRef.current.innerHTML.trim());
+      const jobDescriptionElem = jobBodyElem;
+
+      const cleanedJobDescriptionElem = jobDescriptionElem.replace(/>\s+</g, '><');
+      const jobDescriptionTextContent = extractTextFromHtml(cleanedJobDescriptionElem);
+
+      const postData = {
+        "Resume": uploadedResume, // Use uploaded resume content directly
+        "Job-Description": jobDescriptionTextContent,
+        "apiKey": storedApiKey  // Include the API key in postData
+      };
+
+      try {
+        const response = await fetch('http://127.0.0.1:3000/generate-resume', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': token
+          },
+          body: JSON.stringify(postData),
+          credentials: 'include'
+        });
+
+        if (response.status === 404) {
+          throw new Error('Resource not found');
+        } else if (response.status >= 500) {
+          throw new Error('Server error');
+        } else if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const blob = await response.blob();
+        const blobUrl = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = `reworded_resume.docx`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+
+      } catch (error) {
+        console.error('Error:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
   };
 
-  const handleDownload = async () => {
+  const handleCoverDownload = async () => {
     setIsLoading(true);
 
     // Promisified version of chrome.storage.sync.get
@@ -134,7 +218,7 @@ const DownloadButton = () => {
 
   const handleClick = () => {
     setIsExpanded(!isExpanded);
-    handleDownload();
+    handleCoverDownload();
   };
 
   const handleMouseEnter = () => {
@@ -147,57 +231,271 @@ const DownloadButton = () => {
     setIconStyle({ ...iconStyle, fill: '#cc39a4' });
   };
 
+  //auth to send to other tabs 
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    chrome.storage.local.get('authToken', (result) => {
+      if (result.authToken) {
+        setIsAuthenticated(true);
+      }
+      else {
+        setIsAuthenticated(false);
+      }
+    });
+  }, []);
+
+  const handleLoginClick = () => {
+    chrome.runtime.sendMessage({ action: "openNewTab" }, function (response) {
+      console.log(response.message);
+    });
+  };
+
   if (!window.location.href.includes("linkedin.com")) return null;
 
   return (
-    <div className="main" style={{ position: 'fixed', top: '50%', right: '0', transform: 'translateY(-50%)', zIndex: 9999 }}>
-      <div className="card1" onClick={handleClick} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
-        <div className="icon-container">
-          {isLoading ? (
-            <div className="loader">
-              <div className="waves"></div>
-            </div>
-          ) : (
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="32"
-              height="32"
-              id="letter"
-              className="instagram"
-              color='#5e5bc2'
-            >
-              <path fill="#d3d5e7" d="M6.5 4.766v-.268c0-1.108-.892-2-2-2s-2 .892-2 2v1h4" />
-              <path fill="#f0f0f0" d="M17.765 24.499H10.5v1c0 1.107-.892 2-2 2s-2-.893-2-2v-21c0-1.108-.892-2-2-2h19c1.108 0 2 .892 2 2v20h-3.576z" />
-              <path fill="#d3d5e7" d="M8.5 27.499h19c1.108 0 2-.893 2-2v-1h-19v1c0 1.107-.892 2-2 2" />
-              <path fill="#ffc408" d="m16.634 25.696 8.823-9.156 2.036 2.113-8.823 9.155z" />
-              <path fill="#242c88" d="M4.45 1022.361a.5.5 0 0 0 .05 1h19c.84 0 1.5.66 1.5 1.5v11.867a.5.5 0 1 0 1 0v-11.867c0-1.376-1.124-2.5-2.5-2.5h-19a.5.5 0 0 0-.05 0z" transform="translate(0 -1020.362)" />
-              <path fill="#ff5751" d="m18.67 27.809-1.357 1.408a.933.933 0 0 1-1.357 0l-.68-.704a1.02 1.02 0 0 1 0-1.408l1.358-1.409" />
-              <path fill="#242c88" d="M16.615 1045.553a.5.5 0 0 0-.342.158l-1.357 1.408a1.523 1.523 0 0 0 0 2.104l.68.703a1.453 1.453 0 0 0 2.078 0l1.357-1.408a.5.5 0 0 0-.72-.694l-1.358 1.408c-.19.198-.447.198-.637 0l-.68-.705a.517.517 0 0 1 0-.713l1.358-1.41a.5.5 0 0 0-.379-.851z" transform="translate(0 -1020.362)" />
-              <path fill="#242c88" d="M16.288 1045.699a.49.51 0 0 0 0 .72l2.035 2.112a.49.51 0 0 0 .694 0l8.823-9.156a.49.51 0 0 0 0-.72l-2.036-2.112a.49.51 0 0 0-.694 0l-8.822 9.156zm1.04.36 8.13-8.436 1.341 1.392-8.129 8.436-1.342-1.392z" transform="translate(0 -1020.362)" />
-              <path fill="#d3d5e7" d="m25.457 16.54 3.054-1.056-1.018 3.17z" />
-              <path fill="#242c88" d="M28.502 1035.346a.5.5 0 0 0-.154.027l-3.055 1.056a.5.5 0 0 0-.195.82l2.035 2.112a.5.5 0 0 0 .836-.193l1.017-3.17a.5.5 0 0 0-.484-.653zm-.773 1.299-.456 1.421-.912-.947 1.368-.474z" transform="translate(0 -1020.362)" />
-              <path fill="#242c88" d="M18.336 1044.496a.5.5 0 0 0-.365.852l1.357 1.41a.5.5 0 1 0 .72-.695l-1.357-1.409a.5.5 0 0 0-.355-.158zm7.156-3.607a.5.5 0 0 0-.492.506v3.375a.5.5 0 1 0 1 0v-3.375a.5.5 0 0 0-.508-.506z" transform="translate(0 -1020.362)" />
-              <path fill="#d3d5e7" d="M12.315 1036.869c-.35 0-.665.177-.933.443-.268.267-.494.625-.679 1.012-.37.774-.577 1.538-.577 2.228 0 .738.19 1.362.58 1.74.383.37.935.564 1.61.564.674 0 1.227-.194 1.61-.565.39-.377.58-1.001.58-1.74 0-.689-.208-1.453-.578-2.227-.185-.387-.41-.745-.678-1.012-.268-.266-.583-.443-.934-.443z" transform="translate(0 -1020.362)" />
-              <path fill="#242c88" d="M12.314 1036.37c-.518 0-.956.26-1.285.587-.327.326-.576.73-.777 1.152-.394.824-.625 1.654-.625 2.444 0 .824.202 1.585.73 2.097.493.478 1.188.705 1.957.705h.002c.77 0 1.464-.227 1.957-.705.53-.512.733-1.273.733-2.097 0-.79-.233-1.62-.627-2.444-.202-.421-.45-.826-.777-1.152-.329-.327-.767-.588-1.286-.588h-.002zm0 1h.002c.183 0 .373.09.58.296.21.208.412.522.58.875.347.724.53 1.422.53 2.012 0 .652-.178 1.137-.428 1.379-.272.264-.683.423-1.262.423h-.002c-.578 0-.989-.16-1.261-.423-.25-.242-.426-.727-.426-1.38 0-.589.181-1.287.527-2.011.169-.352.372-.667.58-.875.208-.206.398-.297.58-.297z" transform="translate(0 -1020.362)" />
-            </svg>
-          )}
+    isAuthenticated ? (
+      <div className="main" style={{ position: 'fixed', top: '50%', right: '0', transform: 'translateY(-50%)', zIndex: 9999 }}>
+        <div className="card1" onClick={handleClick} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+          <div className="icon-container">
+            {isLoading ? (
+              <div className="loader">
+                <div className="waves"></div>
+              </div>
+            ) : (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="45"
+                height="45"
+                viewBox="0 0 24 24"
+                className="instagram"
+                color='#5e5bc2'
+              >
+                <rect
+                  width="4.72"
+                  height="4.72"
+                  x="-2.36"
+                  y="-2.36"
+                  rx="0.52"
+                  ry="0.52"
+                  transform="matrix(.83 0 0 .83 12 12) translate(2.26 -6.22)"
+                ></rect>
+                <path
+                  d="M1.97-.75h-3.95a.75.75 0 000 1.5h3.95a.75.75 0 100-1.5z"
+                  transform="matrix(.83 0 0 .83 12 12) translate(-4.7 -7.72)"
+                ></path>
+                <path
+                  d="M-7.57 1.79v-4.91a.33.33 0 01.27-.35H7.29a.32.32 0 01.27.35v7.87h.4c.378 0 .751.075 1.1.22v-8.09a1.81 1.81 0 00-1.77-1.85H-7.3a1.82 1.82 0 00-1.77 1.85v4.91z"
+                  transform="matrix(.83 0 0 .83 12 12) translate(-1.29 -7.03)"
+                ></path>
+                <path
+                  d="M10.89-5.32a.752.752 0 00-.6 1.38.34.34 0 01.2.42L8.16 2.57v-6a1.48 1.48 0 00-1.48-1.48H-4.57l-1.07-2.2a1.49 1.49 0 00-1.35-.78h-3.51a1.48 1.48 0 00-1.49 1.48V6.41a1.48 1.48 0 001.49 1.48H6.68a1.62 1.62 0 001.33-.84l3.84-10a1.85 1.85 0 00-.96-2.37zM-3.66 3.51a.75.75 0 110 1.5 3 3 0 01-2.95-2.95V.96a3 3 0 013-3 .75.75 0 110 1.5c-.8 0-1.45.65-1.45 1.45v1.1a1.45 1.45 0 001.4 1.5zM2.59.63a6.42 6.42 0 01-1.58 4.11.76.76 0 01-.58.27.74.74 0 01-.57-.27A6.36 6.36 0 01-1.69.63v-1.87a.75.75 0 111.5 0V.63a4.72 4.72 0 00.62 2.32A4.73 4.73 0 001.06.63v-1.87a.75.75 0 111.5 0z"
+                  transform="matrix(.83 0 0 .83 12 12) translate(-.01 4.11)"
+                ></path>
+              </svg>
+            )}
+          </div>
+        </div>
+        <div className="card3" onClick={handleResumeDownload} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="45"
+            height="45"
+            viewBox="0 0 24 24"
+            color="#5e5bc2"
+            className="bi-bi-github"
+          >
+            <path
+              d="M9.62 17.8H5.37a.75.75 0 100 1.5h4.25a.75.75 0 100-1.5z"
+              transform="matrix(.83 0 0 .83 12 12) translate(-4.51 6.55) translate(-7.49 -18.55)"
+            ></path>
+            <path
+              d="M9.18 3.17a5.72 5.72 0 100 11.44 5.72 5.72 0 000-11.44zm0 2.54a1.68 1.68 0 110 3.36 1.68 1.68 0 010-3.36zm0 7.7a6.16 6.16 0 01-3-.94 3.12 3.12 0 016 0 6.16 6.16 0 01-3 .94z"
+              transform="matrix(.83 0 0 .83 12 12) translate(-2.82 -3.11) translate(-9.18 -8.89)"
+            ></path>
+            <path
+              d="M19.19 13.5l1.4 3.69h2.72a.67.67 0 01.47 1.17L21.42 20l1.31 3a.71.71 0 01-1 .89l-3.16-1.78-3.19 1.79a.71.71 0 01-1-.89l1.31-3-2.37-1.65a.67.67 0 01.47-1.17h2.71l1.4-3.69a.73.73 0 011.29 0z"
+              transform="matrix(.83 0 0 .83 12 12) translate(6.55 6.55) translate(-18.55 -18.55)"
+            ></path>
+            <path
+              d="M13 22.45H1.77a.27.27 0 01-.27-.27V1.77c0-.15.12-.27.27-.27h15.31c.15 0 .27.12.27.27V12a2.16 2.16 0 011.2-.35c.1-.01.2-.01.3 0V1.77A1.77 1.77 0 0017.08 0H1.77A1.77 1.77 0 000 1.77v20.41A1.77 1.77 0 001.77 24H12.9a2.21 2.21 0 01.1-1.55z"
+              transform="matrix(.83 0 0 .83 12 12) translate(-2.58) translate(-9.42 -12)"
+            ></path>
+          </svg>
         </div>
       </div>
-      <div className="card3" onClick={handleGithubClick}>
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="32"
-          height="32"
-          viewBox="0 0 16 16"
-          fill="currentColor"
-          className="bi bi-github"
-          style={{ fill: 'black' }}
+    ) : (
 
-        >
-          <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z" />
-        </svg>
+
+      <div className="main" style={{ position: 'fixed', top: '50%', right: '0', transform: 'translateY(-50%)', zIndex: 9999 }}>
+        <div className="card1" onClick={handleLoginClick} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+          <div className="icon-container">
+            {isLoading ? (
+              <div className="loader">
+                <div className="waves"></div>
+              </div>
+            ) : (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="60"
+                height="60"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  fill="#8F9EB6"
+                  d="M63 84H37c-8.284 0-15-6.716-15-15V48a5 5 0 015-5h46a5 5 0 015 5v21c0 8.284-6.716 15-15 15z"
+                  transform="matrix(.2 0 0 .2 12 12) translate(0 13.5) translate(-50 -63.5)"
+                ></path>
+                <path
+                  fill="#FCBA7F"
+                  d="M22 51h56v10H22z"
+                  transform="matrix(.2 0 0 .2 12 12) translate(0 6) translate(-50 -56)"
+                ></path>
+                <path
+                  fill="#4E6D91"
+                  d="M53.5 77.5l-1.896-7.583a2.5 2.5 0 10-3.208 0L46.5 77.5h7z"
+                  transform="matrix(.2 0 0 .2 12 12) translate(0 21.5) translate(-50 -71.5)"
+                ></path>
+                <path
+                  fill="#B3B2C3"
+                  d="M36 42v-6.605c0-7.538 5.793-14.025 13.323-14.379C57.363 20.637 64 27.044 64 35v7.5h7v-6.997c0-11.387-8.854-21.085-20.234-21.49C38.819 13.589 29 23.148 29 35v7h7z"
+                  transform="matrix(.2 0 0 .2 12 12) translate(0 -21.75) translate(-50 -28.25)"
+                ></path>
+                <path
+                  fill="#1F212B"
+                  d="M63 85H37c-8.822 0-16-7.178-16-16V48c0-3.309 2.691-6 6-6h46c3.309 0 6 2.691 6 6v21c0 8.822-7.178 16-16 16zM27 44c-2.206 0-4 1.794-4 4v21c0 7.72 6.28 14 14 14h26c7.72 0 14-6.28 14-14V48c0-2.206-1.794-4-4-4H27z"
+                  transform="matrix(.2 0 0 .2 12 12) translate(0 13.5) translate(-50 -63.5)"
+                ></path>
+                <path
+                  fill="#1F212B"
+                  d="M72 42.5h-2v-6.997c0-10.92-8.645-20.112-19.27-20.49-5.479-.192-10.678 1.792-14.617 5.594C32.171 24.412 30 29.523 30 35v7h-2v-7c0-6.025 2.388-11.647 6.725-15.832 4.333-4.183 10.055-6.363 16.076-6.154C62.49 13.43 72 23.519 72 35.503V42.5z"
+                  transform="matrix(.2 0 0 .2 12 12) translate(0 -22.25) translate(-50 -27.75)"
+                ></path>
+                <path
+                  fill="#1F212B"
+                  d="M65 42.5h-2V35a12.89 12.89 0 00-4.028-9.408c-2.595-2.476-5.989-3.75-9.602-3.577C42.434 22.341 37 28.219 37 35.396V42h-2v-6.604c0-8.247 6.271-15.001 14.276-15.378 4.134-.191 8.08 1.27 11.076 4.128A14.862 14.862 0 0165 35v7.5zM78 52H65.5a.5.5 0 010-1H78a.5.5 0 010 1zm-15.5 0h-5a.5.5 0 010-1h5a.5.5 0 010 1zm-8 0H22a.5.5 0 010-1h32.5a.5.5 0 010 1zM22 60h56v1H22zm31.5 18h-7a.503.503 0 01-.486-.621l1.824-7.297a3 3 0 114.323 0l1.824 7.297A.5.5 0 0153.5 78zm-6.359-1h5.719l-1.74-6.961a.5.5 0 01.164-.504A2.002 2.002 0 0050 66a2.002 2.002 0 00-1.283 3.534c.146.123.21.319.164.504L47.141 77z"
+                  transform="matrix(.2 0 0 .2 12 12) translate(0 -1) translate(-50 -49)"
+                ></path>
+                <path
+                  fill="#1F212B"
+                  d="M20.018 55.504h11.446v1H20.018z"
+                  transform="matrix(.2 0 0 .2 12 12) rotate(-55.3 -6.42 26.219) translate(-25.74 -56)"
+                ></path>
+                <path
+                  fill="#1F212B"
+                  d="M28.018 55.504h11.446v1H28.018z"
+                  transform="matrix(.2 0 0 .2 12 12) rotate(-55.3 -2.407 18.567) translate(-33.74 -56)"
+                ></path>
+                <path
+                  fill="#1F212B"
+                  d="M36.018 55.504h11.446v1H36.018z"
+                  transform="matrix(.2 0 0 .2 12 12) rotate(-55.3 1.606 10.915) translate(-41.74 -56)"
+                ></path>
+                <path
+                  fill="#1F212B"
+                  d="M44.018 55.504h11.446v1H44.018z"
+                  transform="matrix(.2 0 0 .2 12 12) rotate(-55.3 5.609 3.258) translate(-49.74 -56)"
+                ></path>
+                <path
+                  fill="#1F212B"
+                  d="M52.018 55.504h11.446v1H52.018z"
+                  transform="matrix(.2 0 0 .2 12 12) rotate(-55.3 9.621 -4.394) translate(-57.74 -56)"
+                ></path>
+                <path
+                  fill="#1F212B"
+                  d="M60.018 55.504h11.446v1H60.018z"
+                  transform="matrix(.2 0 0 .2 12 12) rotate(-55.3 13.634 -12.046) translate(-65.74 -56)"
+                ></path>
+                <path
+                  fill="#1F212B"
+                  d="M68.018 55.504h11.446v1H68.018z"
+                  transform="matrix(.2 0 0 .2 12 12) rotate(-55.3 17.646 -19.698) translate(-73.74 -56)"
+                ></path>
+              </svg>
+            )}
+          </div>
+        </div>
+        <div className="card3" onClick={handleLoginClick}>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="60"
+            height="60"
+            viewBox="0 0 24 24"
+          >
+            <path
+              fill="#8F9EB6"
+              d="M63 84H37c-8.284 0-15-6.716-15-15V48a5 5 0 015-5h46a5 5 0 015 5v21c0 8.284-6.716 15-15 15z"
+              transform="matrix(.2 0 0 .2 12 12) translate(0 13.5) translate(-50 -63.5)"
+            ></path>
+            <path
+              fill="#FCBA7F"
+              d="M22 51h56v10H22z"
+              transform="matrix(.2 0 0 .2 12 12) translate(0 6) translate(-50 -56)"
+            ></path>
+            <path
+              fill="#4E6D91"
+              d="M53.5 77.5l-1.896-7.583a2.5 2.5 0 10-3.208 0L46.5 77.5h7z"
+              transform="matrix(.2 0 0 .2 12 12) translate(0 21.5) translate(-50 -71.5)"
+            ></path>
+            <path
+              fill="#B3B2C3"
+              d="M36 42v-6.605c0-7.538 5.793-14.025 13.323-14.379C57.363 20.637 64 27.044 64 35v7.5h7v-6.997c0-11.387-8.854-21.085-20.234-21.49C38.819 13.589 29 23.148 29 35v7h7z"
+              transform="matrix(.2 0 0 .2 12 12) translate(0 -21.75) translate(-50 -28.25)"
+            ></path>
+            <path
+              fill="#1F212B"
+              d="M63 85H37c-8.822 0-16-7.178-16-16V48c0-3.309 2.691-6 6-6h46c3.309 0 6 2.691 6 6v21c0 8.822-7.178 16-16 16zM27 44c-2.206 0-4 1.794-4 4v21c0 7.72 6.28 14 14 14h26c7.72 0 14-6.28 14-14V48c0-2.206-1.794-4-4-4H27z"
+              transform="matrix(.2 0 0 .2 12 12) translate(0 13.5) translate(-50 -63.5)"
+            ></path>
+            <path
+              fill="#1F212B"
+              d="M72 42.5h-2v-6.997c0-10.92-8.645-20.112-19.27-20.49-5.479-.192-10.678 1.792-14.617 5.594C32.171 24.412 30 29.523 30 35v7h-2v-7c0-6.025 2.388-11.647 6.725-15.832 4.333-4.183 10.055-6.363 16.076-6.154C62.49 13.43 72 23.519 72 35.503V42.5z"
+              transform="matrix(.2 0 0 .2 12 12) translate(0 -22.25) translate(-50 -27.75)"
+            ></path>
+            <path
+              fill="#1F212B"
+              d="M65 42.5h-2V35a12.89 12.89 0 00-4.028-9.408c-2.595-2.476-5.989-3.75-9.602-3.577C42.434 22.341 37 28.219 37 35.396V42h-2v-6.604c0-8.247 6.271-15.001 14.276-15.378 4.134-.191 8.08 1.27 11.076 4.128A14.862 14.862 0 0165 35v7.5zM78 52H65.5a.5.5 0 010-1H78a.5.5 0 010 1zm-15.5 0h-5a.5.5 0 010-1h5a.5.5 0 010 1zm-8 0H22a.5.5 0 010-1h32.5a.5.5 0 010 1zM22 60h56v1H22zm31.5 18h-7a.503.503 0 01-.486-.621l1.824-7.297a3 3 0 114.323 0l1.824 7.297A.5.5 0 0153.5 78zm-6.359-1h5.719l-1.74-6.961a.5.5 0 01.164-.504A2.002 2.002 0 0050 66a2.002 2.002 0 00-1.283 3.534c.146.123.21.319.164.504L47.141 77z"
+              transform="matrix(.2 0 0 .2 12 12) translate(0 -1) translate(-50 -49)"
+            ></path>
+            <path
+              fill="#1F212B"
+              d="M20.018 55.504h11.446v1H20.018z"
+              transform="matrix(.2 0 0 .2 12 12) rotate(-55.3 -6.42 26.219) translate(-25.74 -56)"
+            ></path>
+            <path
+              fill="#1F212B"
+              d="M28.018 55.504h11.446v1H28.018z"
+              transform="matrix(.2 0 0 .2 12 12) rotate(-55.3 -2.407 18.567) translate(-33.74 -56)"
+            ></path>
+            <path
+              fill="#1F212B"
+              d="M36.018 55.504h11.446v1H36.018z"
+              transform="matrix(.2 0 0 .2 12 12) rotate(-55.3 1.606 10.915) translate(-41.74 -56)"
+            ></path>
+            <path
+              fill="#1F212B"
+              d="M44.018 55.504h11.446v1H44.018z"
+              transform="matrix(.2 0 0 .2 12 12) rotate(-55.3 5.609 3.258) translate(-49.74 -56)"
+            ></path>
+            <path
+              fill="#1F212B"
+              d="M52.018 55.504h11.446v1H52.018z"
+              transform="matrix(.2 0 0 .2 12 12) rotate(-55.3 9.621 -4.394) translate(-57.74 -56)"
+            ></path>
+            <path
+              fill="#1F212B"
+              d="M60.018 55.504h11.446v1H60.018z"
+              transform="matrix(.2 0 0 .2 12 12) rotate(-55.3 13.634 -12.046) translate(-65.74 -56)"
+            ></path>
+            <path
+              fill="#1F212B"
+              d="M68.018 55.504h11.446v1H68.018z"
+              transform="matrix(.2 0 0 .2 12 12) rotate(-55.3 17.646 -19.698) translate(-73.74 -56)"
+            ></path>
+          </svg>
+        </div>
       </div>
-    </div>
+    )
   );
 };
 
