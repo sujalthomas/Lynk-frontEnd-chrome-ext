@@ -63,6 +63,28 @@ const Popup = () => {
 
   const [uploadedResume, setUploadedResume] = useState('');
 
+  function getUserIdFromToken(callback) {
+    chrome.storage.local.get('authToken', function (result) {
+      if (result.authToken) {
+        const token = result.authToken;
+
+        // Decode the token to get the user ID
+        // Assuming your token structure is JWT
+        const payload = token.split('.')[1];
+        const decodedPayload = atob(payload); // decode from base64
+        const jsonData = JSON.parse(decodedPayload);
+
+        const userId = jsonData.user;
+
+        callback(userId);
+      } else {
+        console.error('No token found in storage.');
+        callback(null);
+      }
+    });
+
+  }
+
   const handleFileUpload = async (file) => {
     const formData = new FormData();
     formData.append('resume', file);
@@ -70,6 +92,18 @@ const Popup = () => {
     // Read the content of the uploaded file
     const fileContent = await file.text();
     setUploadedResume(fileContent);
+
+    // Get user_id from chrome storage
+    try {
+      const userId = await getUserIdFromStorage();
+      // Append user_id to formData
+      formData.append('user_id', userId);
+    } catch (error) {
+      console.error(error);
+      return;  // Exit the function if no user ID is found
+    }
+
+    console.log(formData);
 
     // Send the content to the content script
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
@@ -94,6 +128,20 @@ const Popup = () => {
       console.error('Error uploading file:', error);
     }
   };
+
+  function getUserIdFromStorage() {
+    return new Promise((resolve, reject) => {
+      chrome.storage.local.get('authToken', function (result) {
+        if (result.authToken) {
+          resolve(result.authToken);
+        } else {
+          reject('No token found in storage.');
+        }
+      });
+    });
+  }
+
+
 
 
   const handleGlobeClick = async (e) => {
@@ -121,7 +169,7 @@ const Popup = () => {
   };
 
   useEffect(() => {
-    chrome.storage.local.get(['apiKey', 'token'], result => {
+    chrome.storage.local.get(['apiKey', 'SET_API_KEY'], result => {
       if (result.apiKey) {
         setApiKey(result.apiKey);
       }
@@ -137,7 +185,13 @@ const Popup = () => {
       setIsValid(validateApiKeyFormat(apiKey));
       chrome.storage.local.set({ apiKey: apiKey }).then(() => {
         console.log('API key is stored in chrome storage.');
+
+        // Send the API key to the background script
+        chrome.runtime.sendMessage({ type: 'SET_API_KEY', apiKey: apiKey }, function (response) {
+          console.log(response.message);
+        });
       });
+
     }
   }, [apiKey]);
 

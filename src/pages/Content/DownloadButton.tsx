@@ -57,169 +57,111 @@ const DownloadButton = () => {
   );
 
 
+
+
+
+  //resume download
+
+
+
   const handleResumeDownload = async () => {
-    setIsLoading(true);
 
-    // Promisified version of chrome.storage.sync.get
-    const getFromStorage = (key: string): Promise<string> => {
-      return new Promise((resolve, reject) => {
-        chrome.storage.local.get([key], (result) => {
-          if (chrome.runtime.lastError) {
-            reject(new Error(chrome.runtime.lastError.message));
-          } else {
-            resolve(result[key]);
-          }
-        });
-      });
-    };
-
-    // Fetch token
-    const token = await getFromStorage('token');
-    // Fetch API key from chrome storage
-    const storedApiKey = await getFromStorage('apiKey');
-
-    if (!token) {
-      console.error("Token not found in storage.");
-      setIsLoading(false);
-      return;
-    }
-
-    if (uploadedResume && jobBodyRef.current) {
-      const jobBodyElem = sanitizeHTML(jobBodyRef.current.innerHTML.trim());
-      const jobDescriptionElem = jobBodyElem;
-
-      const cleanedJobDescriptionElem = jobDescriptionElem.replace(/>\s+</g, '><');
-      const jobDescriptionTextContent = extractTextFromHtml(cleanedJobDescriptionElem);
-
-      const postData = {
-        "Resume": uploadedResume, // Use uploaded resume content directly
-        "Job-Description": jobDescriptionTextContent,
-        "apiKey": storedApiKey  // Include the API key in postData
-      };
-
-      try {
-        const response = await fetch('http://127.0.0.1:3000/generate-resume', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': token
-          },
-          body: JSON.stringify(postData),
-          credentials: 'include'
-        });
-
-        if (response.status === 404) {
-          throw new Error('Resource not found');
-        } else if (response.status >= 500) {
-          throw new Error('Server error');
-        } else if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-
-        const blob = await response.blob();
-        const blobUrl = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = blobUrl;
-        a.download = `reworded_resume.docx`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-
-      } catch (error) {
-        console.error('Error:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    }
   };
+
+
+  function getDataFromBackground(callback: (data: { token: string | null, apiKey: string | null }) => void) {
+    chrome.runtime.sendMessage({ type: 'GET_DATA' }, function (response) {
+      callback({
+        token: response && response.token ? response.token : null,
+        apiKey: response && response.apiKey ? response.apiKey : null
+      });
+    });
+  }
+
+
+
+  /// generate cover letter download 
 
   const handleCoverDownload = async () => {
     setIsLoading(true);
 
-    // Promisified version of chrome.storage.sync.get
-    const getFromStorage = (key: string): Promise<string> => {
-      return new Promise((resolve, reject) => {
-        chrome.storage.local.get([key], (result) => {
-          if (chrome.runtime.lastError) {
-            reject(new Error(chrome.runtime.lastError.message));
-          } else {
-            resolve(result[key]);
-          }
-        });
-      });
-    };
 
-    // Fetch token
-    const token = await getFromStorage('token');
-    // Fetch API key from chrome storage
-    const storedApiKey = await getFromStorage('apiKey');
-
-    if (!token) {
-      console.error("Token not found in storage.");
-      setIsLoading(false);
-      return;
-    }
-
-    if (headerRef.current && jobBodyRef.current) {
-      const headerElem = sanitizeHTML(headerRef.current.outerHTML.trim());
-      const jobBodyElem = sanitizeHTML(jobBodyRef.current.innerHTML.trim());
-      const jobListingElem = `${headerElem}${jobBodyElem}`;
-
-      const cleanedJobListingElem = jobListingElem.replace(/>\s+</g, '><');
-      const textContent = extractTextFromHtml(cleanedJobListingElem);
-
-      let companyName = getDefaultIfEmpty(document.querySelector('.jobs-unified-top-card__primary-description .app-aware-link')?.textContent?.trim() || '', 'Company');
-      let recruiter = getDefaultIfEmpty((document.querySelector('.artdeco-card .jobs-poster__name') as HTMLElement)?.innerText.trim(), 'Hiring Manager');
-      const date = new Date().toLocaleDateString();
-
-      const postData = {
-        "Company-name": companyName,
-        "Job-Listing": textContent,
-        "Recruiter": recruiter,
-        "Date": date,
-        "apiKey": storedApiKey  // Include the API key in postData
-      };
-
-      try {
-        const response = await fetch('http://127.0.0.1:3000/generate-cover-letter', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': token
-          },
-          body: JSON.stringify(postData),
-          credentials: 'include'
-        });
-
-        if (response.status === 404) {
-          throw new Error('Resource not found');
-        } else if (response.status >= 500) {
-          throw new Error('Server error');
-        } else if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-
-        const blob = await response.blob();
-        const blobUrl = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = blobUrl;
-        a.download = `${companyName}_cv.docx`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-
-      } catch (error) {
-        console.error('Error:', error);
-      } finally {
+    getDataFromBackground(async (data) => {
+      const { token, apiKey } = data;
+      if (!token) {
+        console.error("Token not found in background.");
         setIsLoading(false);
+        return;
+      }
+
+
+      console.log("Token from background:", token);
+      console.log("API Key from background:", apiKey);
+
+      if (headerRef.current && jobBodyRef.current) {
+        const headerElem = sanitizeHTML(headerRef.current.outerHTML.trim());
+        const jobBodyElem = sanitizeHTML(jobBodyRef.current.innerHTML.trim());
+        const jobListingElem = `${headerElem}${jobBodyElem}`;
+
+        const cleanedJobListingElem = jobListingElem.replace(/>\s+</g, '><');
+        const textContent = extractTextFromHtml(cleanedJobListingElem);
+
+        let companyName = getDefaultIfEmpty(document.querySelector('.jobs-unified-top-card__primary-description .app-aware-link')?.textContent?.trim() || '', 'Company');
+        let recruiter = getDefaultIfEmpty((document.querySelector('.artdeco-card .jobs-poster__name') as HTMLElement)?.innerText.trim(), 'Hiring Manager');
+        const date = new Date().toLocaleDateString();
+
+        const postData = {
+          "Company-name": companyName,
+          "Job-Listing": textContent,
+          "Recruiter": recruiter,
+          "Date": date,
+          "apiKey": apiKey,  // Include the API key in postData
+          "user_id": token
+        };
+
+        console.log("Post data:", postData);
+
+        try {
+          const response = await fetch('http://127.0.0.1:3000/cover-letter', {
+            method: 'POST',
+            mode: 'cors',  // add this line
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': token
+            },
+            body: JSON.stringify(postData),
+          });
+          console.log("Fetch request completed.", response);
+
+          if (response.status === 404) {
+            throw new Error('Resource not found');
+          } else if (response.status >= 500) {
+            throw new Error('Server error');
+          } else if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+          }
+
+          console.log("Creating blob and initiating download.");
+          const blob = await response.blob();
+
+          const blobUrl = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = blobUrl;
+          a.download = `${companyName}_cv.docx`;
+          document.body.appendChild(a);
+          a.click();
+          console.log("Download should have started.");
+          a.remove();
+
+        } catch (error) {
+          console.error('Error:', error);
+        } finally {
+          setIsLoading(false);
+        }
       }
     }
-  };
-
-  const handleClick = () => {
-    setIsExpanded(!isExpanded);
-    handleCoverDownload();
-  };
+    );
+  }
 
   const handleMouseEnter = () => {
     setButtonStyle({ ...buttonStyle, background: '#cc39a4' });
@@ -238,12 +180,11 @@ const DownloadButton = () => {
     chrome.storage.local.get('authToken', (result) => {
       if (result.authToken) {
         setIsAuthenticated(true);
-      }
-      else {
+      } else {
         setIsAuthenticated(false);
       }
     });
-  }, []);
+  }, []);  // Added missing dependency array
 
   const handleLoginClick = () => {
     chrome.runtime.sendMessage({ action: "openNewTab" }, function (response) {
@@ -256,7 +197,7 @@ const DownloadButton = () => {
   return (
     isAuthenticated ? (
       <div className="main" style={{ position: 'fixed', top: '50%', right: '0', transform: 'translateY(-50%)', zIndex: 9999 }}>
-        <div className="card1" onClick={handleClick} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+        <div className="card1" onClick={handleCoverDownload} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
           <div className="icon-container">
             {isLoading ? (
               <div className="loader">

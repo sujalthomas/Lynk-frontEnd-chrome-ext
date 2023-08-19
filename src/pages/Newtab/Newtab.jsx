@@ -76,11 +76,17 @@ const Newtab = () => {
         //chrome.storage.local.set({ authToken: data.token });
         //use this for now
         chrome.storage.local.set({ authToken: data.token });
+
+        chrome.runtime.sendMessage({type: 'SET_TOKEN', token: data.token}, function(response) {
+          console.log(response.message);
+          console.log('Token sent to background script.');
+        });
         //navigate('/dashboard'); // Redirect to the dashboard or other page
         // after successful login, close the current tab
-        chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-          chrome.tabs.remove(tabs[0].id);
-        });
+        //chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+        //  chrome.tabs.remove(tabs[0].id);
+        //}); 
+        
 
         //test for now w google
         //chrome.tabs.create({ url: 'https://www.google.com' });
@@ -90,6 +96,8 @@ const Newtab = () => {
     } catch (error) {
       setMessage('An error occurred: ' + error.message);
     }
+    
+    
   };
 
   async function handlePasswordResetRequest(e) {
