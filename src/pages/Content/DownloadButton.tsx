@@ -45,28 +45,83 @@ const DownloadButton = () => {
     return tempDiv.textContent || tempDiv.innerText || "";
   }
 
-  let uploadedResume = "";
-
-  chrome.runtime.onMessage.addListener(
-    function (request, sender, sendResponse) {
-      if (request.type === "uploadedResume") {
-        uploadedResume = request.content;
-        sendResponse({ message: "Resume content received" });
-      }
-    }
-  );
-
-
 
 
 
   //resume download
-
-
-
   const handleResumeDownload = async () => {
+    setIsLoading(true);
 
-  };
+    getDataFromBackground(async (data) => {
+      const { token, apiKey } = data;
+      if (!token) {
+        console.error("Token not found in background.");
+        setIsLoading(false);
+        return;
+      }
+
+
+      console.log("Token from background:", token);
+      console.log("API Key from background:", apiKey);
+
+
+    if (jobBodyRef.current) {
+      const jobBodyElem = sanitizeHTML(jobBodyRef.current.innerHTML.trim());
+      const jobDescriptionElem = jobBodyElem;
+
+      const cleanedJobDescriptionElem = jobDescriptionElem.replace(/>\s+</g, '><');
+      const jobDescriptionTextContent = extractTextFromHtml(cleanedJobDescriptionElem);
+
+      const postData = {
+        "Job-Description": jobDescriptionTextContent,
+        "apiKey": apiKey,  // Include the API key in postData
+        "user_id": token
+      };
+
+      console.log("Post data:", postData);
+
+
+      try {
+        const response = await fetch('http://127.0.0.1:3000/generate-resume', {
+          method: 'POST',
+          mode: 'cors',  // add this line
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': token
+          },
+          body: JSON.stringify(postData),
+        });
+        console.log("Fetch request completed.", response);
+
+
+        if (response.status === 404) {
+          throw new Error('Resource not found');
+        } else if (response.status >= 500) {
+          throw new Error('Server error');
+        } else if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const blob = await response.blob();
+        const blobUrl = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = `new_resume.docx`;
+        document.body.appendChild(a);
+        a.click();
+        console.log("Download should have started.");
+        a.remove();
+
+      } catch (error) {
+        console.error('Error:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  }
+  );
+}
+
 
 
   function getDataFromBackground(callback: (data: { token: string | null, apiKey: string | null }) => void) {
@@ -77,8 +132,6 @@ const DownloadButton = () => {
       });
     });
   }
-
-
 
   /// generate cover letter download 
 
