@@ -1,13 +1,27 @@
 import React, { useState } from 'react';
 import './Newtab.css';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const Newtab = () => {
   const [isFlipped, setIsFlipped] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [newPassword, setNewPassword] = useState(''); // Add a state variable for the new password
   const [name, setName] = useState('');
   const [message, setMessage] = useState(''); // Add a state variable for messages
+  //const notify = () => toast("Reset code sent to email successfully!");
 
+  /* const notify_password = () => toast('Reset code successfully sent to your email', {
+    position: "bottom-right",
+    autoClose: 5000,
+    hideProgressBar: false,
+    closeOnClick: true,
+    pauseOnHover: true,
+    draggable: true,
+    progress: undefined,
+    theme: "light",
+  }); */
 
   function handleCardFlip() {
     setIsFlipped(!isFlipped);
@@ -16,18 +30,6 @@ const Newtab = () => {
   function handleButtonClick(e) {
     e.stopPropagation();
     // Your logic for handling the button click, such as signing in with Apple or Google
-  }
-
-  // Added function to show the login view
-  function showLoginForm() {
-    setShowPasswordReset(false);
-    setIsFlipped(false);
-  }
-
-  // Added function to show the registration view
-  function showRegistrationForm() {
-    setShowPasswordReset(false);
-    setIsFlipped(true);
   }
 
   async function handleRegistration(e) {
@@ -77,16 +79,16 @@ const Newtab = () => {
         //use this for now
         chrome.storage.local.set({ authToken: data.token });
 
-        chrome.runtime.sendMessage({type: 'SET_TOKEN', token: data.token}, function(response) {
+        chrome.runtime.sendMessage({ type: 'SET_TOKEN', token: data.token }, function (response) {
           console.log(response.message);
           console.log('Token sent to background script.');
         });
         //navigate('/dashboard'); // Redirect to the dashboard or other page
+
         // after successful login, close the current tab
         //chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
         //  chrome.tabs.remove(tabs[0].id);
         //}); 
-        
 
         //test for now w google
         //chrome.tabs.create({ url: 'https://www.google.com' });
@@ -96,15 +98,16 @@ const Newtab = () => {
     } catch (error) {
       setMessage('An error occurred: ' + error.message);
     }
-    
-    
+
+
   };
 
-  async function handlePasswordResetRequest(e) {
-    e.preventDefault();
+  async function handlePasswordResetRequest(event) {
+    event.preventDefault();
     try {
       const response = await fetch('http://127.0.0.1:3000/request-reset-password', {
         method: 'POST',
+        mode: 'cors',  // add this line
         headers: {
           'Content-Type': 'application/json',
         },
@@ -158,15 +161,24 @@ const Newtab = () => {
           <div className="flip-card__inner">
             {
               showPasswordReset ? (
-                <div className="flip-card__front"> {/* This is the password reset form */}
-                  <div className="title">Reset Password</div>
-                  <form action="" className="flip-card__form">
-                    <input type="email" placeholder="Email" name="email" className="flip-card__input" value={email} onChange={(e) => setEmail(e.target.value)} />
-                    <div className="forgot">
-                    <button className="flip-card__btn" onClick={handlePasswordResetRequest}>Reset Password</button>
-                    </div>
-                  </form>
-                </div>
+                <>
+                  <div className="flip-card__front"> {/* This is the password reset form */}
+                    <div className="title">Reset Password</div>
+                    <form action="" className="flip-card__form">
+                      <input type="email" placeholder="Email" name="email" className="flip-card__input" value={email} onChange={(e) => setEmail(e.target.value)} />
+                      <div className="forgot">
+                        <button className="flip-card__btn" onClick={() => { handlePasswordResetRequest();}}>Reset Password</button>
+                      </div>
+                    </form>
+                  </div>
+                  <div className="flip-card__back">
+                    <div className="title">Reset Code</div>
+                    <form action="" className="flip-card__form">
+                      <input type="password" placeholder="Password" name="password" className="flip-card__input" value={password} onChange={(e) => setNewPassword(e.target.value)} />
+                      <button className="flip-card__btn" onClick={handlePasswordResetWithToken}>Confirm!</button>
+                    </form>
+                  </div>
+                </>
               ) : (
                 <>
                   <div className="flip-card__front">
@@ -178,7 +190,6 @@ const Newtab = () => {
                           <a href="#" onClick={(e) => {
                             e.preventDefault();
                             togglePasswordResetForm();
-                            handlePasswordResetRequest();
                           }}> Reset here!</a>
                         </span>
                       </div>

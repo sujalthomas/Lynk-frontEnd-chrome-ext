@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import DOMPurify from 'dompurify';
+//import { ToastContainer, toast } from 'react-toastify';
+//import 'react-toastify/dist/ReactToastify.css';
 
 const DownloadButton = () => {
-  const [isExpanded, setIsExpanded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [buttonStyle, setButtonStyle] = useState({
     width: '90px',
@@ -23,6 +24,7 @@ const DownloadButton = () => {
   const headerRef = useRef<HTMLElement | null>(null);
   const jobBodyRef = useRef<HTMLElement | null>(null);
   const employerRef = useRef<HTMLElement | null>(null);
+  //const notify = () => toast("Wow so easy!");
 
   useEffect(() => {
     headerRef.current = document.querySelector('.p5');
@@ -45,8 +47,14 @@ const DownloadButton = () => {
     return tempDiv.textContent || tempDiv.innerText || "";
   }
 
-
-
+  function getDataFromBackground(callback: (data: { token: string | null, apiKey: string | null }) => void) {
+    chrome.runtime.sendMessage({ type: 'GET_DATA' }, function (response) {
+      callback({
+        token: response && response.token ? response.token : null,
+        apiKey: response && response.apiKey ? response.apiKey : null
+      });
+    });
+  }
 
   //resume download
   const handleResumeDownload = async () => {
@@ -65,74 +73,68 @@ const DownloadButton = () => {
       console.log("API Key from background:", apiKey);
 
 
-    if (jobBodyRef.current) {
-      const jobBodyElem = sanitizeHTML(jobBodyRef.current.innerHTML.trim());
-      const jobDescriptionElem = jobBodyElem;
+      if (jobBodyRef.current) {
+        const jobBodyElem = sanitizeHTML(jobBodyRef.current.innerHTML.trim());
+        const jobDescriptionElem = jobBodyElem;
 
-      const cleanedJobDescriptionElem = jobDescriptionElem.replace(/>\s+</g, '><');
-      const jobDescriptionTextContent = extractTextFromHtml(cleanedJobDescriptionElem);
+        const cleanedJobDescriptionElem = jobDescriptionElem.replace(/>\s+</g, '><');
+        const jobDescriptionTextContent = extractTextFromHtml(cleanedJobDescriptionElem);
 
-      const postData = {
-        "Job-Description": jobDescriptionTextContent,
-        "apiKey": apiKey,  // Include the API key in postData
-        "user_id": token
-      };
+        const postData = {
+          "Job-Description": jobDescriptionTextContent,
+          "apiKey": apiKey,  // Include the API key in postData
+          "user_id": token
+        };
 
-      console.log("Post data:", postData);
-
-
-      try {
-        const response = await fetch('http://127.0.0.1:3000/generate-resume', {
-          method: 'POST',
-          mode: 'cors',  // add this line
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': token
-          },
-          body: JSON.stringify(postData),
-        });
-        console.log("Fetch request completed.", response);
+        console.log("Post data:", postData);
 
 
-        if (response.status === 404) {
-          throw new Error('Resource not found');
-        } else if (response.status >= 500) {
-          throw new Error('Server error');
-        } else if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
+        try {
+          const response = await fetch('http://127.0.0.1:3000/generate-resume', {
+            method: 'POST',
+            mode: 'cors',  // add this line
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': token
+            },
+            body: JSON.stringify(postData),
+          });
+          console.log("Fetch request completed.", response);
+
+
+          if (response.status === 404) {
+            //toast.error("An error occurred while generating the resume! 404");
+            throw new Error('Resource not found');
+          } else if (response.status >= 500) {
+            //toast.error("An error occurred while generating the resume! 500");
+            throw new Error('Server error');
+          } else if (!response.ok) {
+            //toast.error("An error occurred while generating the resume!");
+            throw new Error(`HTTP error! Status: ${response.status}`);
+          }
+
+          const blob = await response.blob();
+          const blobUrl = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = blobUrl;
+          a.download = `new_resume.docx`;
+          document.body.appendChild(a);
+          a.click();
+          console.log("Download should have started.");
+          a.remove();
+
+        } catch (error) {
+          //toast.error("An error occurred while downloading the resume!");
+          console.error('Error:', error);
+        } finally {
+          setIsLoading(false);
         }
-
-        const blob = await response.blob();
-        const blobUrl = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = blobUrl;
-        a.download = `new_resume.docx`;
-        document.body.appendChild(a);
-        a.click();
-        console.log("Download should have started.");
-        a.remove();
-
-      } catch (error) {
-        console.error('Error:', error);
-      } finally {
-        setIsLoading(false);
       }
     }
-  }
-  );
-}
-
-
-
-  function getDataFromBackground(callback: (data: { token: string | null, apiKey: string | null }) => void) {
-    chrome.runtime.sendMessage({ type: 'GET_DATA' }, function (response) {
-      callback({
-        token: response && response.token ? response.token : null,
-        apiKey: response && response.apiKey ? response.apiKey : null
-      });
-    });
+    );
   }
 
+  
   /// generate cover letter download 
 
   const handleCoverDownload = async () => {
@@ -187,10 +189,13 @@ const DownloadButton = () => {
           console.log("Fetch request completed.", response);
 
           if (response.status === 404) {
+            //toast.error("An error occurred while generating the cover letter! 404" , {position: toast.POSITION.TOP_CENTER});
             throw new Error('Resource not found');
           } else if (response.status >= 500) {
+            //toast.error("An error occurred while generating the cover letter! 500");
             throw new Error('Server error');
           } else if (!response.ok) {
+            //toast.error("An error occurred while generating the cover letter!");
             throw new Error(`HTTP error! Status: ${response.status}`);
           }
 
@@ -207,6 +212,7 @@ const DownloadButton = () => {
           a.remove();
 
         } catch (error) {
+          //toast.error("An error occurred while downloading the cover letter!");
           console.error('Error:', error);
         } finally {
           setIsLoading(false);
@@ -237,7 +243,7 @@ const DownloadButton = () => {
         setIsAuthenticated(false);
       }
     });
-  }, []);  // Added missing dependency array
+  }, []);  
 
   const handleLoginClick = () => {
     chrome.runtime.sendMessage({ action: "openNewTab" }, function (response) {
@@ -253,9 +259,39 @@ const DownloadButton = () => {
         <div className="card1" onClick={handleCoverDownload} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
           <div className="icon-container">
             {isLoading ? (
-              <div className="loader">
-                <div className="waves"></div>
+
+              <div>
+                <h1>Downloading</h1>
+                {/* Fill */}
+                <svg width={0} height={0}>
+                  <filter id="gooey-fill">
+                    <feGaussianBlur in="SourceGraphic" stdDeviation={20} result="blur" />
+                    <feColorMatrix
+                      in="blur"
+                      mode="matrix"
+                      values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 50 -16"
+                      result="goo"
+                    />
+                  </filter>
+                </svg>
+                <div className="fill">
+                  <div className="gooey-container">
+                    <span className="level">
+                      <span className="bubble" />
+                      <span className="bubble" />
+                      <span className="bubble" />
+                      <span className="bubble" />
+                      <span className="bubble" />
+                      <span className="bubble" />
+                      <span className="bubble" />
+                      <span className="bubble" />
+                    </span>
+                  </div>
+                </div>
+                {/*/Fill */}
               </div>
+
+
             ) : (
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -325,9 +361,39 @@ const DownloadButton = () => {
         <div className="card1" onClick={handleLoginClick} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
           <div className="icon-container">
             {isLoading ? (
-              <div className="loader">
-                <div className="waves"></div>
+
+              <div>
+                <h1>Downloading</h1>
+                {/* Fill */}
+                <svg width={0} height={0}>
+                  <filter id="gooey-fill">
+                    <feGaussianBlur in="SourceGraphic" stdDeviation={20} result="blur" />
+                    <feColorMatrix
+                      in="blur"
+                      mode="matrix"
+                      values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 50 -16"
+                      result="goo"
+                    />
+                  </filter>
+                </svg>
+                <div className="fill">
+                  <div className="gooey-container">
+                    <span className="level">
+                      <span className="bubble" />
+                      <span className="bubble" />
+                      <span className="bubble" />
+                      <span className="bubble" />
+                      <span className="bubble" />
+                      <span className="bubble" />
+                      <span className="bubble" />
+                      <span className="bubble" />
+                    </span>
+                  </div>
+                </div>
+                {/*/Fill */}
               </div>
+
+
             ) : (
               <svg
                 xmlns="http://www.w3.org/2000/svg"
