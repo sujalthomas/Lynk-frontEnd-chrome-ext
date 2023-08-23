@@ -1,3 +1,76 @@
+body {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-family: "proxima-nova-soft", sans-serif;
+  -webkit-user-select: none;
+  user-select: none;
+  user-select: none;
+  overflow: hidden;
+}
+body .vertical-centered-box {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+}
+body .vertical-centered-box:after {
+  content: '';
+  display: inline-block;
+  height: 100%;
+  vertical-align: middle;
+  margin-right: -0.25em;
+}
+body .vertical-centered-box .content {
+  box-sizing: border-box;
+  display: inline-block;
+  vertical-align: middle;
+  text-align: left;
+  font-size: 0;
+}
+* {
+  transition: all .3s;
+}
+body {
+  background: #2c2d44;
+}
+#particles-background, #particles-foreground {
+  left: -51%;
+  top: -51%;
+  width: 202%;
+  height: 202%;
+  transform: scale3d(.5,.5,1);
+}
+#particles-background {
+  background: #2c2d44;
+  background-image: -moz-linear-gradient(45deg,#3f3251 2%,#002025 100%);
+  background-image: -webkit-linear-gradient(45deg,#3f3251 2%,#002025 100%);
+  background-image: linear-gradient(45deg,#3f3251 2%,#002025 100%);
+}
+@keyframes rotate {
+  0% {
+    transform: rotate(0deg);
+ }
+  100% {
+    transform: rotate(360deg);
+ }
+}
+@keyframes fade {
+  0% {
+    opacity: 1;
+ }
+  50% {
+    opacity: 0.25;
+ }
+}
+@keyframes fade-in {
+  0% {
+    opacity: 0;
+ }
+  100% {
+    opacity: 1;
+ }
+}
+
 .wrapper {
   --input-focus: #2d8cf0;
   --font-color: #323232;
@@ -57,6 +130,15 @@
   transition: 0.3s;
 }
 
+.slider:after {
+  content: "";
+  position: absolute;
+  width: 20px;
+  top: 0;
+  font-weight: 600;
+  background-color: white;
+}
+
 
 .flip-control {
   cursor: pointer;
@@ -90,7 +172,7 @@
   top: 0;
   font-weight: 600;
   content: 'Log in';
-  left: -70px;
+  left: -80px;
   top: 0;
   text-decoration: underline;
   color: (var(--main-color));
@@ -100,7 +182,7 @@
 .card-side::after {
   position: absolute;
   content: 'Sign up';
-  left: 70px;
+  left: 40px;
   top: 0;
   width: 100px;
   text-decoration: none;
@@ -110,7 +192,7 @@
 
 
 .flipped .slider:before {
-  background-color: var(--bg-color);
+  background-color: white;
   /* White color after switch */
   transform: translateX(30px);
   /* Move to the right when flipped */

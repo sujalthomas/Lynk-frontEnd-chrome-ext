@@ -58,7 +58,6 @@ const DownloadButton = () => {
 
   //resume download
   const handleResumeDownload = async () => {
-    setIsLoading(true);
 
     getDataFromBackground(async (data) => {
       const { token, apiKey } = data;
@@ -86,7 +85,9 @@ const DownloadButton = () => {
           "user_id": token
         };
 
+
         console.log("Post data:", postData);
+        setIsLoading(true);
 
 
         try {
@@ -134,11 +135,10 @@ const DownloadButton = () => {
     );
   }
 
-  
+
   /// generate cover letter download 
 
   const handleCoverDownload = async () => {
-    setIsLoading(true);
 
 
     getDataFromBackground(async (data) => {
@@ -173,6 +173,8 @@ const DownloadButton = () => {
           "apiKey": apiKey,  // Include the API key in postData
           "user_id": token
         };
+
+        setIsLoading(true);
 
         console.log("Post data:", postData);
 
@@ -243,7 +245,7 @@ const DownloadButton = () => {
         setIsAuthenticated(false);
       }
     });
-  }, []);  
+  }, []);
 
   const handleLoginClick = () => {
     chrome.runtime.sendMessage({ action: "openNewTab" }, function (response) {
@@ -261,7 +263,7 @@ const DownloadButton = () => {
             {isLoading ? (
 
               <div>
-                <h1>Downloading</h1>
+                <h1>Generating</h1>
                 {/* Fill */}
                 <svg width={0} height={0}>
                   <filter id="gooey-fill">
@@ -363,7 +365,7 @@ const DownloadButton = () => {
             {isLoading ? (
 
               <div>
-                <h1>Downloading</h1>
+                <h1>Generating</h1>
                 {/* Fill */}
                 <svg width={0} height={0}>
                   <filter id="gooey-fill">
