@@ -409,3 +409,23 @@ body {
   justify-content: center;
   align-items: center;
 }
+
+.flip-card__back_reset {
+  padding: 20px;
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  background: rgba(17, 24, 39, 1);
+  gap: 20px;
+  border-radius: 5px;
+  border: 2px solid var(--main-color);
+  box-shadow: 4px 4px var(--main-color);
+}
+
+.flip-card__back_reset {
+  width: 100%;
+  transform: rotateY(180deg);
+}
