@@ -11,12 +11,10 @@ const Newtab = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [newPassword, setNewPassword] = useState(''); // Add a state variable for the new password
+  const [otCode, setOTCode] = useState(''); // Add a state variable for the new password
   const [name, setName] = useState('');
   const [message, setMessage] = useState(''); // Add a state variable for messages
-  const [isTokenVerified, setIsTokenVerified] = useState(false); // Add a state variable to track whether the token is verified
-  //const notify = () => toast("Reset code sent to email successfully!");
   const [confirmPassword, setConfirmPassword] = useState('');
-  const { token } = useParams(); // This captures the token from the URL
 
 
   const notify_password = () => toast('Reset code successfully sent to your email', {
@@ -40,6 +38,12 @@ const Newtab = () => {
   }
 
   async function handleRegistration() {
+    // Password and confirmPassword validation
+    if (newPassword !== confirmPassword) {
+      toast.error("Passwords do not match!");
+      return;
+    }
+
     try {
       const response = await fetch('http://127.0.0.1:3000/authenticate', {
         method: 'POST',
@@ -121,20 +125,15 @@ const Newtab = () => {
       });
       const data = await response.json();
       if (data.success) {
-        setMessage('Password reset email has been sent.');
-        setShowPasswordReset(true);  // Display the password reset form
+        toast.success('Reset code successfully sent to your email');
+
       } else {
-        setMessage('Failed to send password reset email: ' + data.message);
+        toast.error('Reset code not sent to your email' + data.message);
       }
     } catch (error) {
-      setMessage('An error occurred: ' + error.message);
+      toast.error('An error occurred: ' + error.message);
     }
   }
-
-
-
-
-
 
   const [showPasswordReset, setShowPasswordReset] = useState(false);
 
@@ -262,87 +261,44 @@ const Newtab = () => {
     };
   }, []);
 
-  function PasswordReset() {
+  async function handlePasswordReset(e, email, otCode, newPassword, confirmPassword) {
+    e.preventDefault();
 
-    useEffect(() => {
-      async function verifyToken() {
-        try {
-          const response = await fetch(`http://127.0.0.1:3000/verify-reset-token/${token}`);
-          const data = await response.json();
-          if (data.success) {
-            setIsTokenVerified(true);
-          } else {
-            setMessage(data.message);
-          }
-        } catch (error) {
-          setMessage('An error occurred: ' + error.message);
-        }
-      }
-
-      verifyToken();
-    }, [token]);
-
-    async function handlePasswordResetWithToken(e, token, newPassword) {
-      e.preventDefault();
-
-      if (newPassword !== confirmPassword) {
-        setMessage('Passwords do not match');
+    if (newPassword !== confirmPassword) {
+        toast.error("Passwords do not match!");
         return;
-      }
-
-      try {
-        const response = await fetch(`http://127.0.0.1:3000/reset-password/${token}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ newPassword }),
+    }
+    
+    try {
+        console.log("Sending password reset request with: ", { email: email, code: otCode, newPassword: newPassword });
+        
+        const response = await fetch('http://127.0.0.1:3000/reset-password', {
+            method: 'POST',
+            mode: 'cors',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email: email, code: otCode, newPassword: newPassword }),
         });
+        
         const data = await response.json();
+        
         if (data.success) {
-          setMessage('Password has been reset successfully.');
+            toast.success(data.message + ' Password has been reset successfully.');
         } else {
-          setMessage('Failed to reset password: ' + data.message);
+            toast.error(data.message);
         }
-      } catch (error) {
-        setMessage('An error occurred: ' + error.message);
-      }
-
-      if (token && isTokenVerified) {
-        return (
-          <div className="flip-card__back_reset">
-            <div className="title">Reset Code</div>
-            <form action="" className="flip-card__form">
-              <input
-                type="password"
-                placeholder="Password"
-                name="password"
-                className="flip-card__input"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-              />
-
-              <input
-                type="password"
-                placeholder="Confirm Password"
-                name="confirmPassword"
-                className="flip-card__input"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-              />
-              <button className="flip-card__btn" onClick={(e) => handlePasswordResetWithToken(e)}>Confirm!</button>
-            </form>
-          </div>
-        );
-      } else if (token) {
-        // Render a loader or a message saying "Verifying token..."
-        return <div>Verifying token...</div>;
-      } else {
-        return <div>No token provided</div>;
-      }
+    } catch (error) {
+        toast.error('An error occurred: ' + error.message);
     }
 
-  }
+    if (!response.ok) {
+        toast.error(`Error: ${response.status} - ${response.statusText}`);
+    }
+}
+
+
+
 
 
   return (
@@ -370,22 +326,48 @@ const Newtab = () => {
                               <button className="flip-card__btn" onClick={(e) => { handlePasswordResetRequest(e); notify_password(); }}>Reset Password</button>
                             </div>
                           </form>
-                          < ToastContainer
-                            position="bottom-right"
-                            autoClose={5000}
-                            hideProgressBar={false}
-                            newestOnTop={false}
-                            closeOnClick
-                            rtl={false}
-                            pauseOnFocusLoss
-                            draggable
-                            pauseOnHover
-                            theme="dark"
-                          />
+                          <form action="" className="flip-card__form">
+                            <input type="email" placeholder="Email" name="email" className="flip-card__input" value={email} onChange={(e) => setEmail(e.target.value)} />
+                            <input
+                              type="text"
+                              placeholder="One Time Code"
+                              name="password"
+                              className="flip-card__input"
+                              value={otCode}
+                              onChange={(e) => setOTCode(e.target.value)}
+                            />
+                            <input
+                              type="text"
+                              placeholder="Password"
+                              name="password"
+                              className="flip-card__input"
+                              value={newPassword}
+                              onChange={(e) => setNewPassword(e.target.value)}
+                            />
+
+                            <input
+                              type="text"
+                              placeholder="Confirm Password"
+                              name="confirmPassword"
+                              className="flip-card__input"
+                              value={confirmPassword}
+                              onChange={(e) => setConfirmPassword(e.target.value)}
+                            />
+                            <button className="flip-card__btn" onClick={(e) => handlePasswordReset(e)}>Confirm!</button>
+                          </form>
                         </div>
-                        <Routes className="flip-card__back_reset">
-                          <Route path="/reset-password/:token" component={PasswordReset} />
-                        </Routes>
+                        <ToastContainer
+                          position="bottom-right"
+                          autoClose={5000}
+                          hideProgressBar={false}
+                          newestOnTop={false}
+                          closeOnClick
+                          rtl={false}
+                          pauseOnFocusLoss
+                          draggable
+                          pauseOnHover
+                        />
+
                       </>
                     ) : (
                       <>
