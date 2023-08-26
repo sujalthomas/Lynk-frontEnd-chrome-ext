@@ -32,12 +32,8 @@ const Newtab = () => {
     setIsFlipped(!isFlipped);
   }
 
-  function handleButtonClick(e) {
-    e.stopPropagation();
-    // Your logic for handling the button click, such as signing in with Apple or Google
-  }
-
-  async function handleRegistration() {
+  async function handleRegistration(e) {
+    e.preventDefault();
     // Password and confirmPassword validation
     if (newPassword !== confirmPassword) {
       toast.error("Passwords do not match!");
@@ -45,72 +41,82 @@ const Newtab = () => {
     }
 
     try {
-      const response = await fetch('http://127.0.0.1:3000/authenticate', {
+      const response = await fetch('http://127.0.0.1:3000/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ action: 'register', name, email, password }),
+        body: JSON.stringify({ email, password: newPassword }),
       });
       const data = await response.json();
       if (data.success) {
-        setMessage('Login successful!');
-        localStorage.setItem('authToken', data.token);
-        //navigate('/dashboard'); // Redirect to the dashboard or other page
-        // After successful registration
-        window.location.reload();
-
-        //test for now w google
-        //chrome.tabs.create({ url: 'https://www.google.com' });
+        toast.success('Registration successful! Please check your email for a verification code.');
+        //window.location.reload();
       } else {
-        setMessage('Login failed: ' + data.message);
+        toast.error('Registration failed: ' + data.message);
       }
     } catch (error) {
-      setMessage('An error occurred: ' + error.message);
+      toast.error('An error occurred: ' + error.message);
     }
   }
 
+  async function handleRegistrationVerify(e) {
+    e.preventDefault();
+
+    try {
+      const response = await fetch('http://127.0.0.1:3000/verify', {
+        method: 'POST',
+        mode: 'cors',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, code: otCode }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        toast.error(`Error: ${response.status} - ${response.statusText}`);
+      }
+
+      if (data.success) {
+        toast.success(data.message + ' Account has been verified successfully.');
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error('An error occurred: ' + error.message);
+    }
+  }
 
   async function handleLogin(e) {
-    e.preventDefault(); // Prevent default behavior
+    e.preventDefault();
+
     try {
-      const response = await fetch('http://127.0.0.1:3000/authenticate', {
+      const response = await fetch('http://127.0.0.1:3000/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ action: 'login', email, password }),
+        body: JSON.stringify({ email, password }),
       });
 
       const data = await response.json();
       if (data.success) {
-        setMessage('Login successful!');
-        //chrome.storage.local.set({ authToken: data.token });
-        //use this for now
+        toast.success('Login successful!');
         chrome.storage.local.set({ authToken: data.token });
 
         chrome.runtime.sendMessage({ type: 'SET_TOKEN', token: data.token }, function (response) {
           console.log(response.message);
           console.log('Token sent to background script.');
         });
-        //navigate('/dashboard'); // Redirect to the dashboard or other page
-
-        // after successful login, close the current tab
-        //chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-        //  chrome.tabs.remove(tabs[0].id);
-        //}); 
-
-        //test for now w google
-        //chrome.tabs.create({ url: 'https://www.google.com' });
       } else {
-        setMessage('Login failed: ' + data.message);
+        toast.error('Login failed: ' + data.message);
       }
     } catch (error) {
-      setMessage('An error occurred: ' + error.message);
+      toast.error('An error occurred: ' + error.message);
     }
-
-
-  };
+  }
 
   async function handlePasswordResetRequest(e) {
     e.preventDefault();
@@ -139,6 +145,43 @@ const Newtab = () => {
 
   function togglePasswordResetForm() {
     setShowPasswordReset(prevState => !prevState);
+  }
+
+  async function handlePasswordReset(e) {
+    e.preventDefault();
+    console.log(email, otCode, newPassword, confirmPassword);
+    // Password and confirmPassword validation
+
+    if (newPassword !== confirmPassword) {
+      toast.error("Passwords do not match!");
+      return;
+    }
+
+    try {
+      console.log("Sending password reset request with: ", { email: email, code: otCode, newPassword: newPassword });
+      const response = await fetch('http://127.0.0.1:3000/reset-password', {
+        method: 'POST',
+        mode: 'cors',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: email, code: otCode, newPassword: newPassword })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        toast.error(`Error: ${response.status} - ${response.statusText}`);
+      }
+
+      if (data.success) {
+        toast.success(data.message + ' Password has been reset successfully.');
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error('An error occurred: ' + error.message);
+    }
   }
 
   useEffect(() => {
@@ -261,45 +304,6 @@ const Newtab = () => {
     };
   }, []);
 
-  async function handlePasswordReset(e, email, otCode, newPassword, confirmPassword) {
-    e.preventDefault();
-
-    if (newPassword !== confirmPassword) {
-        toast.error("Passwords do not match!");
-        return;
-    }
-    
-    try {
-        console.log("Sending password reset request with: ", { email: email, code: otCode, newPassword: newPassword });
-        
-        const response = await fetch('http://127.0.0.1:3000/reset-password', {
-            method: 'POST',
-            mode: 'cors',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ email: email, code: otCode, newPassword: newPassword }),
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            toast.success(data.message + ' Password has been reset successfully.');
-        } else {
-            toast.error(data.message);
-        }
-    } catch (error) {
-        toast.error('An error occurred: ' + error.message);
-    }
-
-    if (!response.ok) {
-        toast.error(`Error: ${response.status} - ${response.statusText}`);
-    }
-}
-
-
-
-
 
   return (
     <Router>
@@ -337,7 +341,7 @@ const Newtab = () => {
                               onChange={(e) => setOTCode(e.target.value)}
                             />
                             <input
-                              type="text"
+                              type="password"
                               placeholder="Password"
                               name="password"
                               className="flip-card__input"
@@ -346,7 +350,7 @@ const Newtab = () => {
                             />
 
                             <input
-                              type="text"
+                              type="password"
                               placeholder="Confirm Password"
                               name="confirmPassword"
                               className="flip-card__input"
@@ -367,7 +371,6 @@ const Newtab = () => {
                           draggable
                           pauseOnHover
                         />
-
                       </>
                     ) : (
                       <>
@@ -481,6 +484,17 @@ const Newtab = () => {
                               </div>
                             </div> */}
                             <button className="flip-card__btn" onClick={handleRegistration}>Confirm!</button>
+                          </form>
+                          <form action="" className="flip-card__form">
+                            <input
+                              type="text"
+                              placeholder="One Time Code"
+                              name="password"
+                              className="flip-card__input"
+                              value={otCode}
+                              onChange={(e) => setOTCode(e.target.value)}
+                            />
+                            <button className="flip-card__btn" onClick={(e) => handleRegistrationVerify(e)}>Verify!</button>
                           </form>
                         </div>
                       </>
