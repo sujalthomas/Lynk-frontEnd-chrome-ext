@@ -3,60 +3,51 @@ import './Newtab.css';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import particlesJS from 'particles.js';
-import { BrowserRouter as Router, Route, useParams, Routes } from 'react-router-dom';
-
+import { BrowserRouter as Router } from 'react-router-dom';
 
 const Newtab = () => {
   const [isFlipped, setIsFlipped] = useState(false);
-  const [isLogin, setIsLogin] = useState(true);
-  const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [newPassword, setNewPassword] = useState(''); // Add a state variable for the new password
   const [otCode, setOTCode] = useState(''); // Add a state variable for the new password
   const [name, setName] = useState('');
-  const [message, setMessage] = useState(''); // Add a state variable for messages
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPasswordReset, setShowPasswordReset] = useState(false);
 
+  function togglePasswordResetForm() {
+    setShowPasswordReset(prevState => !prevState);
+  }
 
-  const notify_password = () => toast('Reset code successfully sent to your email', {
-    position: "bottom-right",
-    autoClose: 5000,
-    hideProgressBar: false,
-    closeOnClick: true,
-    pauseOnHover: true,
-    draggable: true,
-    progress: undefined,
-    theme: "light",
-  });
 
   function handleCardFlip() {
     setIsFlipped(!isFlipped);
   }
 
-/*   function handleLoginClick() {
-    setIsLogin(true);
-    setIsSignUp(false);
-    setIsFlipped(false);
-  }
-
-  function handleSignUpClick() {
-    setIsLogin(false);
-    setIsSignUp(true);
-    setIsFlipped(true);
-  } */
-
 
   async function handleRegistration(e) {
     e.preventDefault();
-    // Password and confirmPassword validation
+    // Input validation
+    if (!email) {
+      toast.error("Email is required!");
+      return;
+    }
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailPattern.test(email)) {
+      toast.error('Please enter a valid email address.');
+      return;
+    }
+    if (!newPassword) {
+      toast.error("Password is required!");
+      return;
+    }
     if (newPassword !== confirmPassword) {
       toast.error("Passwords do not match!");
       return;
     }
 
     try {
-      const response = await fetch('https://flask-lynk-env.up.railway.app/register', {
+      const response = await fetch('http://127.0.0.1:5000/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -66,7 +57,6 @@ const Newtab = () => {
       const data = await response.json();
       if (data.success) {
         toast.success('Registration successful! Please check your email for a verification code.');
-        //window.location.reload();
       } else {
         toast.error('Registration failed: ' + data.message);
       }
@@ -75,11 +65,21 @@ const Newtab = () => {
     }
   }
 
+
   async function handleRegistrationVerify(e) {
     e.preventDefault();
+    // Input validation
+    if (!email) {
+      toast.error("Email is required!");
+      return;
+    }
+    if (!otCode) {
+      toast.error("One-time code is required!");
+      return;
+    }
 
     try {
-      const response = await fetch('https://flask-lynk-env.up.railway.app/verify', {
+      const response = await fetch('http://127.0.0.1:5000/verify', {
         method: 'POST',
         mode: 'cors',
         headers: {
@@ -87,15 +87,13 @@ const Newtab = () => {
         },
         body: JSON.stringify({ email, code: otCode }),
       });
-
       const data = await response.json();
-
       if (!response.ok) {
         toast.error(`Error: ${response.status} - ${response.statusText}`);
       }
-
       if (data.success) {
         toast.success(data.message + ' Account has been verified successfully.');
+        window.location.reload();
       } else {
         toast.error(data.message);
       }
@@ -104,26 +102,44 @@ const Newtab = () => {
     }
   }
 
+
   async function handleLogin(e) {
     e.preventDefault();
+    // Input validation
+    if (!email) {
+      toast.error("Email is required!");
+      return;
+    }
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailPattern.test(email)) {
+      toast.error('Please enter a valid email address.');
+      return;
+    }
+    if (!password) {
+      toast.error("Password is required!");
+      return;
+    }
 
     try {
-      const response = await fetch('https://flask-lynk-env.up.railway.app/login', {
+      const response = await fetch('http://127.0.0.1:5000/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ email, password }),
       });
-
       const data = await response.json();
       if (data.success) {
         toast.success('Login successful!');
         chrome.storage.local.set({ authToken: data.token });
-
         chrome.runtime.sendMessage({ type: 'SET_TOKEN', token: data.token }, function (response) {
-          console.log(response.message);
-          console.log('Token sent to background script.');
+          if (response.error) {
+            toast.error('Error sending token to background script: ' + response.message);
+          } else {
+            console.log(response.message);
+            console.log('Token sent to background script.');
+          }
+          window.location.href = "http://127.0.0.1:5000/";
         });
       } else {
         toast.error('Login failed: ' + data.message);
@@ -133,12 +149,24 @@ const Newtab = () => {
     }
   }
 
+
   async function handlePasswordResetRequest(e) {
     e.preventDefault();
+    // Input validation
+    if (!email) {
+      toast.error("Email is required!");
+      return;
+    }
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailPattern.test(email)) {
+      toast.error('Please enter a valid email address.');
+      return;
+    }
+
     try {
-      const response = await fetch('https://flask-lynk-env.up.railway.app/request-reset-password', {
+      const response = await fetch('http://127.0.0.1:5000/request-reset-password', {
         method: 'POST',
-        mode: 'cors',  // add this line
+        mode: 'cors',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -146,35 +174,38 @@ const Newtab = () => {
       });
       const data = await response.json();
       if (data.success) {
-        toast.success('Reset code successfully sent to your email');
-
+        toast.success(data.message + ' Please check your email for a reset code.');
       } else {
-        toast.error('Reset code not sent to your email' + data.message);
+        toast.error('Unable to send you a rest code, verify the entered email!');
       }
     } catch (error) {
       toast.error('An error occurred: ' + error.message);
     }
   }
 
-  const [showPasswordReset, setShowPasswordReset] = useState(false);
-
-  function togglePasswordResetForm() {
-    setShowPasswordReset(prevState => !prevState);
-  }
 
   async function handlePasswordReset(e) {
     e.preventDefault();
-    console.log(email, otCode, newPassword, confirmPassword);
-    // Password and confirmPassword validation
-
+    // Input validation
+    if (!email) {
+      toast.error("Email is required!");
+      return;
+    }
+    if (!otCode) {
+      toast.error("One-time code is required!");
+      return;
+    }
+    if (!newPassword) {
+      toast.error("New password is required!");
+      return;
+    }
     if (newPassword !== confirmPassword) {
       toast.error("Passwords do not match!");
       return;
     }
 
     try {
-      console.log("Sending password reset request with: ", { email: email, code: otCode, newPassword: newPassword });
-      const response = await fetch('https://flask-lynk-env.up.railway.app/reset-password', {
+      const response = await fetch('http://127.0.0.1:5000/reset-password', {
         method: 'POST',
         mode: 'cors',
         headers: {
@@ -182,15 +213,13 @@ const Newtab = () => {
         },
         body: JSON.stringify({ email: email, code: otCode, newPassword: newPassword })
       });
-
       const data = await response.json();
-
       if (!response.ok) {
         toast.error(`Error: ${response.status} - ${response.statusText}`);
       }
-
       if (data.success) {
         toast.success(data.message + ' Password has been reset successfully.');
+        window.location.reload();
       } else {
         toast.error(data.message);
       }
@@ -198,6 +227,8 @@ const Newtab = () => {
       toast.error('An error occurred: ' + error.message);
     }
   }
+
+
 
   useEffect(() => {
     // Initialize particles.js
@@ -329,6 +360,7 @@ const Newtab = () => {
         <div className="vertical-centered-box">
 
           <div className="wrapper">
+            <ToastContainer position="top-center" />
             <div className={`card-switch ${isFlipped ? 'flipped' : ''}`}>
               <label className="switch">
                 <span onClick={handleCardFlip} className="slider"></span>
@@ -342,7 +374,7 @@ const Newtab = () => {
                           <form action="" className="flip-card__form">
                             <input type="email" placeholder="Email" name="email" className="flip-card__input" value={email} onChange={(e) => setEmail(e.target.value)} />
                             <div className="forgot">
-                              <button className="flip-card__btn" onClick={(e) => { handlePasswordResetRequest(e); notify_password(); }}>Reset Password</button>
+                              <button className="flip-card__btn" onClick={(e) => { handlePasswordResetRequest(e); }}>Reset Password</button>
                             </div>
                           </form>
                           <form action="" className="flip-card__form">
@@ -375,17 +407,8 @@ const Newtab = () => {
                             <button className="flip-card__btn" onClick={(e) => handlePasswordReset(e)}>Confirm!</button>
                           </form>
                         </div>
-                        <ToastContainer
-                          position="bottom-right"
-                          autoClose={5000}
-                          hideProgressBar={false}
-                          newestOnTop={false}
-                          closeOnClick
-                          rtl={false}
-                          pauseOnFocusLoss
-                          draggable
-                          pauseOnHover
-                        />
+
+
                       </>
                     ) : (
                       <>
@@ -401,40 +424,7 @@ const Newtab = () => {
                                 }}> Reset here!</a>
                               </span>
                             </div>
-                            {/*                         <div className="separator">
-                            <div></div>
-                            <span>OR</span>
-                            <div></div>
-                          </div>
-                          <div className="login-with">
-                            <div onClick={handleButtonClick} className="button-log"></div>
-                            <div className="button-log">
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="56.693"
-                                height="56.693"
-                                className="icon"
-                                enableBackground="new 0 0 56.6934 56.6934"
-                                version="1.1"
-                                viewBox="0 0 56.693 56.693"
-                                xmlSpace="preserve"
-                              >
-                                <path d="M51.981 24.481c-7.717-.004-15.435-.002-23.152 0 .001 3.2-.004 6.401.002 9.6h13.407c-.518 3.068-2.34 5.873-4.926 7.6-1.625 1.093-3.492 1.802-5.416 2.139-1.938.33-3.94.373-5.872-.018a14.452 14.452 0 01-5.477-2.365 15.287 15.287 0 01-5.639-7.555c-1.048-3.079-1.056-6.505.005-9.58a15.266 15.266 0 013.57-5.8c1.986-2.033 4.567-3.486 7.348-4.082a14.57 14.57 0 017.223.294 13.333 13.333 0 015.305 3.116c1.512-1.503 3.017-3.016 4.527-4.523.792-.81 1.624-1.586 2.39-2.42-2.292-2.121-4.98-3.827-7.917-4.905-5.287-1.946-11.25-1.987-16.572-.145C14.79 7.891 9.682 12.377 6.85 18.046a24.477 24.477 0 00-2.138 6.184c-1.088 5.343-.33 11.04 2.135 15.908a24.788 24.788 0 006.684 8.215 24.487 24.487 0 008.94 4.508c4.098 1.099 8.46 1.074 12.586.135 3.728-.858 7.256-2.64 10.073-5.24 2.977-2.736 5.1-6.34 6.224-10.214 1.227-4.225 1.396-8.736.627-13.06z"></path>
-                              </svg>
-                            </div>
-                            <div className="button-log">
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="24"
-                                height="24"
-                                fill="#fff"
-                                viewBox="0 0 24 24"
-                              >
-                                <path d="M4.98 3.5C4.98 4.881 3.87 6 2.5 6S.02 4.881.02 3.5C.02 2.12 1.13 1 2.5 1s2.48 1.12 2.48 2.5zM5 8H0v16h5V8zm7.982 0H8.014v16h4.969v-8.399c0-4.67 6.029-5.052 6.029 0V24H24V13.869c0-7.88-8.922-7.593-11.018-3.714V8z"></path>
-                              </svg>
 
-                            </div>
-                          </div> */}
                             <div className="new">
                               <button className="flip-card__btn" onClick={handleLogin}>Login!</button>
                             </div>
@@ -463,41 +453,6 @@ const Newtab = () => {
                               onChange={(e) => setConfirmPassword(e.target.value)}
                             />
 
-                            {/* <div className="separator">
-                            
-                            <div></div>
-                              <span>OR</span>
-                              <div></div> 
-                            </div> */}
-                            {/* <div className="login-with">
-                              <div onClick={handleButtonClick} className="button-log"></div>
-                              <div className="button-log">
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  width="56.693"
-                                  height="56.693"
-                                  className="icon"
-                                  enableBackground="new 0 0 56.6934 56.6934"
-                                  version="1.1"
-                                  viewBox="0 0 56.693 56.693"
-                                  xmlSpace="preserve"
-                                >
-                                  <path d="M51.981 24.481c-7.717-.004-15.435-.002-23.152 0 .001 3.2-.004 6.401.002 9.6h13.407c-.518 3.068-2.34 5.873-4.926 7.6-1.625 1.093-3.492 1.802-5.416 2.139-1.938.33-3.94.373-5.872-.018a14.452 14.452 0 01-5.477-2.365 15.287 15.287 0 01-5.639-7.555c-1.048-3.079-1.056-6.505.005-9.58a15.266 15.266 0 013.57-5.8c1.986-2.033 4.567-3.486 7.348-4.082a14.57 14.57 0 017.223.294 13.333 13.333 0 015.305 3.116c1.512-1.503 3.017-3.016 4.527-4.523.792-.81 1.624-1.586 2.39-2.42-2.292-2.121-4.98-3.827-7.917-4.905-5.287-1.946-11.25-1.987-16.572-.145C14.79 7.891 9.682 12.377 6.85 18.046a24.477 24.477 0 00-2.138 6.184c-1.088 5.343-.33 11.04 2.135 15.908a24.788 24.788 0 006.684 8.215 24.487 24.487 0 008.94 4.508c4.098 1.099 8.46 1.074 12.586.135 3.728-.858 7.256-2.64 10.073-5.24 2.977-2.736 5.1-6.34 6.224-10.214 1.227-4.225 1.396-8.736.627-13.06z"></path>
-                                </svg>
-                              </div>
-                              <div className="button-log">
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  width="24"
-                                  height="24"
-                                  fill="#fff"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path d="M4.98 3.5C4.98 4.881 3.87 6 2.5 6S.02 4.881.02 3.5C.02 2.12 1.13 1 2.5 1s2.48 1.12 2.48 2.5zM5 8H0v16h5V8zm7.982 0H8.014v16h4.969v-8.399c0-4.67 6.029-5.052 6.029 0V24H24V13.869c0-7.88-8.922-7.593-11.018-3.714V8z"></path>
-                                </svg>
-
-                              </div>
-                            </div> */}
                             <button className="flip-card__btn" onClick={handleRegistration}>Confirm!</button>
                           </form>
                           <form action="" className="flip-card__form">

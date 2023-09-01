@@ -3,6 +3,8 @@ import './Popup.css';
 import './Popup.scss';
 import globeImg from './globe.png'; // Correct way to import image
 import logo from '../../assets/img/icon-128.png';
+import { ToastContainer, toast } from 'react-toastify';
+
 
 const Popup = () => {
   const [apiKey, setApiKey] = useState('');
@@ -12,8 +14,9 @@ const Popup = () => {
 
 
   const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
+    setShowPassword(prevShowPassword => !prevShowPassword);
   };
+
 
   const fileInputRef = React.useRef(null);
 
@@ -69,7 +72,6 @@ const Popup = () => {
         const token = result.authToken;
 
         // Decode the token to get the user ID
-        // Assuming your token structure is JWT
         const payload = token.split('.')[1];
         const decodedPayload = atob(payload); // decode from base64
         const jsonData = JSON.parse(decodedPayload);
@@ -79,6 +81,7 @@ const Popup = () => {
         callback(userId);
       } else {
         console.error('No token found in storage.');
+        toast.error('No token found in storage.');
         callback(null);
       }
     });
@@ -100,20 +103,14 @@ const Popup = () => {
       formData.append('user_id', userId);
     } catch (error) {
       console.error(error);
+      toast.error('Failed to upload resume.');
       return;  // Exit the function if no user ID is found
     }
 
     console.log(formData);
 
-    // Send the content to the content script
-    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-      chrome.tabs.sendMessage(tabs[0].id, { type: "uploadedResume", content: fileContent }, function (response) {
-        console.log(response.message);
-      });
-    });
-
     try {
-      const response = await fetch('https://flask-lynk-env.up.railway.app/upload-resume', {
+      const response = await fetch('http://127.0.0.1:5000/upload-resume', {
         method: 'POST',
         body: formData,
       });
@@ -121,11 +118,14 @@ const Popup = () => {
       const data = await response.json();
       if (data.success) {
         console.log('Resume uploaded successfully');
+        toast.success('Resume uploaded successfully');
       } else {
         console.error('Failed to upload resume:', data.message);
+        toast.error('Failed to upload resume.');
       }
     } catch (error) {
       console.error('Error uploading file:', error);
+      toast.error('Failed to upload resume.');
     }
   };
 
@@ -146,34 +146,40 @@ const Popup = () => {
 
   const handleGlobeClick = async (e) => {
     e.preventDefault();
-    // In the authentication request:
-    const authResponse = await fetch('https://flask-lynk-env.up.railway.app/apiverify', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ apiKey: apiKey }), // Use apiKey here
-      credentials: 'include'
-    });
-
-    if (authResponse.ok) {
+    try {
+      const authResponse = await fetch('http://127.0.0.1:5000/apiverify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ apiKey: apiKey }),
+        credentials: 'include'
+      });
       const data = await authResponse.json();
-      const token = data.token;
-      await chrome.storage.local.set({ token: token });
-      alert('Lynk & GPT-4 successfully connected!');
-    } else {
+      if (authResponse.ok && data.success) {
+        const token = data.token;
+        await chrome.storage.local.set({ token: token });
+        console.log('Lynk & GPT-4 successfully connected!');
+        toast.success('Lynk & GPT-4 successfully connected!');
+      } else {
+        console.log('Failed to authenticate.');
+        toast.error('Failed to authenticate.');
+      }      
+    } catch (error) {
+      console.log('Error authenticating:', error);
       alert('Failed to authenticate.');
+      setMessage('Failed to authenticate.');
     }
-
-
   };
 
   useEffect(() => {
     chrome.storage.local.get(['apiKey', 'SET_API_KEY'], result => {
       if (result.apiKey) {
         setApiKey(result.apiKey);
+      } else {
+        console.log('No API key found in chrome storage.');
+        toast.error('No API key found in chrome storage.');
       }
-      // No need to store token in a state variable for now, but you can if you need to use it elsewhere in this component.
     });
   }, []);
 
@@ -225,75 +231,78 @@ const Popup = () => {
   };
 
   return (
-    isAuthenticated ? (
-      <div className="popup-container">
-        <div className="header">
-          <label className="label" htmlFor="api-key">Lynk Chrome Extension</label>
-          <a href="#" onClick={handleGlobeClick}>
-            <img src={globeImg} className="icon" alt="external-link" />
-          </a>
-        </div>
-
-        <div className={`form-group transition-container ${showPassword ? 'js-show-pw eye-open' : 'eye-close'}`}>
-          <input
-            type={showPassword ? "text" : "password"}
-            value={apiKey}
-            onChange={(e) => setApiKey(e.target.value)}
-            className={`form-control-lg form-control-black transition-input ${showPassword ? "show-input" : ""} ${isValid === true ? 'success' : isValid === false ? 'error' : 'neutral'}`}
-            placeholder="OpenAI API Key" // Adding the placeholder attribute here
-          />
-          {/* Lock and Eye icons */}
-          <span className="icon-lock" style={{ position: 'absolute', left: '8px', top: '55%', transform: 'translateY(-50%)', width: '15px', height: '21px', fill: '#5e5bc2' }}>
-            <LockIcon />
-          </span>
-          <span className="icon-eye middle-right js-transition" onClick={togglePasswordVisibility}>
-            <EyeIcon />
-          </span>
-        </div>
-
-        {isValid === true && <p className="text-success">Well done! Your API key format is valid.</p>}
-        {isValid === false && <p className="text-error">Oh, snap! Your API key format is not valid.</p>}
-
-        <div className="resume-upload-container">
-          <input
-            ref={fileInputRef}
-            className="input-file"
-            aria-describedby="file_input_help"
-            id="file_input"
-            type="file"
-            onChange={handleFileChange}
-            style={{ display: 'none' }} // Hide the input element
-          />
-          <button className="btn" type="button" onClick={handleButtonClick}>
-            <strong>Upload Resume</strong>
-            <div id="container-stars">
-              <div id="stars"></div>
-            </div>
-            <div id="glow">
-              <div className="circle"></div>
-              <div className="circle"></div>
-            </div>
-          </button>
-          <p className="text-help"> pdf, docx or txt (max 5 mb ) </p>
-
-        </div>
-      </div>
-    ) : (
-      // JSX for unauthenticated user (i.e., the form)
-      <form className="form">
-        <div className="title">
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            Lynk Tools,
-            <img src={logo} className="logo" alt="external-link" />
+    <>
+      <ToastContainer />
+      {isAuthenticated ? (
+        <div className="popup-container">
+          <div className="header">
+            <label className="label" htmlFor="api-key">Lynk Chrome Extension</label>
+            <a href="#" onClick={handleGlobeClick}>
+              <img src={globeImg} className="icon" alt="external-link" />
+            </a>
           </div>
 
-        </div>
-        <div className="meow">Login / Sign up to continue</div>
-        <button className="flip-card__btn" onClick={handleLoginClick}>Login →</button>
-      </form>
+          <div className={`form-group transition-container ${showPassword ? 'js-show-pw eye-open' : 'eye-close'}`}>
+            <input
+              type={showPassword ? "text" : "password"}
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+              className={`form-control-lg form-control-black transition-input ${showPassword ? "show-input" : ""} ${isValid === true ? 'success' : isValid === false ? 'error' : 'neutral'}`}
+              placeholder="OpenAI API Key"
+            />
+            {/* Lock and Eye icons */}
+            <span className="icon-lock" style={{ position: 'absolute', left: '8px', top: '55%', transform: 'translateY(-50%)', width: '15px', height: '21px', fill: '#5e5bc2' }}>
+              <LockIcon />
+            </span>
+            <span className="icon-eye middle-right js-transition" onClick={togglePasswordVisibility}>
+              <EyeIcon />
+            </span>
+          </div>
 
-    )
+          {isValid === true && <p className="text-success">Well done! Your API key format is valid.</p>}
+          {isValid === false && <p className="text-error">Oh, snap! Your API key format is not valid.</p>}
+
+          <div className="resume-upload-container">
+            <input
+              ref={fileInputRef}
+              className="input-file"
+              aria-describedby="file_input_help"
+              id="file_input"
+              type="file"
+              onChange={handleFileChange}
+              style={{ display: 'none' }}
+            />
+            <button className="btn" type="button" onClick={handleButtonClick}>
+              <strong>Upload Resume</strong>
+              <div id="container-stars">
+                <div id="stars"></div>
+              </div>
+              <div id="glow">
+                <div className="circle"></div>
+                <div className="circle"></div>
+              </div>
+            </button>
+            <p className="text-help"> pdf, docx or txt (max 5 mb ) </p>
+
+          </div>
+        </div>
+      ) : (
+        // JSX for unauthenticated user (i.e., the form)
+        <form className="form">
+          <div className="title">
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              Lynk Tools,
+              <img src={logo} className="logo" alt="external-link" />
+            </div>
+
+          </div>
+          <div className="meow">Login / Sign up to continue</div>
+          <button className="flip-card__btn" onClick={handleLoginClick}>Login →</button>
+        </form>
+      )}
+    </>
   );
 };
+
 
 export default Popup;
