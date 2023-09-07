@@ -62,3 +62,21 @@
 .card3:hover .bi-bi-github {
   fill: white;
 }
+
+.error-message {
+  background-color: #f44336; /* Red background */
+  color: white; /* White text */
+  padding: 10px 20px; /* Some padding */
+  border-radius: 5px; /* Rounded corners */
+  box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.2); /* A little shadow */
+  max-width: 80%; /* Don't let it stretch too wide */
+  margin: 20px auto; /* Center it horizontally */
+  text-align: center; /* Center the text */
+  font-size: 16px; /* Set font size */
+  font-weight: 500; /* Semi-bold text */
+  position: fixed; /* Fixed position */
+  top: 10%; /* 10% from the top */
+  left: 50%; /* Center it horizontally */
+  transform: translateX(-50%); /* Adjust for exact centering */
+  z-index: 10000; /* High z-index to ensure it's on top */
+}

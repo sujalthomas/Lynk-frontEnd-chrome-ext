@@ -1,79 +1,114 @@
 @use 'sass:math';
 
-@keyframes fill-level{
-  0%   { transform : translate3d(-413px, -53px,0) rotate(45deg) } 
-  15%  { transform : translate3d(-393px, -73px,0) rotate(25deg) } 
-  30%  { transform : translate3d(-343px,-123px,0) rotate(45deg) }
-  45%  { transform : translate3d(-283px,-183px,0) rotate(55deg) }
-  60%  { transform : translate3d(-263px,-203px,0) rotate(45deg) }
-  75%  { transform : translate3d(-243px,-223px,0) rotate(35deg) }
-  90%  { transform : translate3d(-223px,-243px,0) rotate(45deg) }
-  100% { transform : translate3d(-203px,-263px,0) rotate(55deg) }
+@keyframes fill-level {
+  0% {
+    transform: translate3d(-413px, -53px, 0) rotate(45deg)
+  }
+
+  15% {
+    transform: translate3d(-393px, -73px, 0) rotate(25deg)
+  }
+
+  30% {
+    transform: translate3d(-343px, -123px, 0) rotate(45deg)
+  }
+
+  45% {
+    transform: translate3d(-283px, -183px, 0) rotate(55deg)
+  }
+
+  60% {
+    transform: translate3d(-263px, -203px, 0) rotate(45deg)
+  }
+
+  75% {
+    transform: translate3d(-243px, -223px, 0) rotate(35deg)
+  }
+
+  90% {
+    transform: translate3d(-223px, -243px, 0) rotate(45deg)
+  }
+
+  100% {
+    transform: translate3d(-203px, -263px, 0) rotate(55deg)
+  }
 }
 
-.fill{
+.fill {
   backface-visibility: hidden;
-  z-index       : 20;
-  position      : relative;
-  width         : 250px;
-  height        : 250px;
-  padding       : 0;
-  border-radius : 50% 50% 50% 50%;
-  overflow      : hidden;
-  transform     : rotate(-45deg);
-  box-shadow    : 0 0 30px 0 #0000ff inset;
-  
+  z-index: 20;
+  position: relative;
+  width: 250px;
+  height: 250px;
+  padding: 0;
+  border-radius: 50% 50% 50% 50%;
+  overflow: hidden;
+  transform: rotate(-45deg);
+  box-shadow: 0 0 30px 0 #0000ff inset;
+
   .gooey-container {
-    filter        : url(#gooey-fill);
-    position      : absolute;
-    top           : 50%;
-    left          : 50%;
-    transform     : translate(-50%,-50%);
-    width         : 300px;
-    height        : 300px;
-    padding       : 0;
-    margin        : 0;
-    box-shadow    : 0 0 0 18px #0000ff inset;
-    border-radius : 50% 0 50% 50%; 
-    overflow      : hidden;
-    
-    .level, .bubble {
-      background : #ff4081;
-    }
-    
-    .level{
-      display          : block;
-      margin           : 0 auto;
-      position         : absolute;
-      top              : 300px;
-      left             : 50%;
-      width            : 500px; 
-      height           : 350px;
-      text-align       : center;
-      transform-origin : 50% 0;
-      transform        : translate3d(-413px, -53px,0) rotate(45deg);
-      animation        : fill-level 14s linear infinite;
-      box-shadow       : 0 0 100px 0 #0000ff inset, 
-                         0 0 200px 0 #0000ff inset;
-    }
-    @keyframes fill-bubbles{
-      0%   { transform : translate3d(-100px,-20px,0) rotate(  0deg)} 
-      50%  { transform : translate3d( 100px,-40px,0) rotate(180deg)}
-      100% { transform : translate3d(-100px,-20px,0) rotate(360deg)}
-    }
+    filter: url(#gooey-fill);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 300px;
+    height: 300px;
+    padding: 0;
+    margin: 0;
+    box-shadow: 0 0 0 18px #0000ff inset;
+    border-radius: 50% 0 50% 50%;
+    overflow: hidden;
+
+    .level,
     .bubble {
-      content       : "";
-      display       : inline-block;
-      width         : 100px;
-      height        : 100px;
-      border-radius : 50%;
-      transform-origin : 50% 50%;
-      transform     : rotate(0deg) translate3d(0,0,0);
-      box-shadow    : 0 0 30px 20px #0000ff inset;
+      background: #ff4081;
     }
+
+    .level {
+      display: block;
+      margin: 0 auto;
+      position: absolute;
+      top: 300px;
+      left: 50%;
+      width: 500px;
+      height: 350px;
+      text-align: center;
+      transform-origin: 50% 0;
+      transform: translate3d(-413px, -53px, 0) rotate(45deg);
+      animation: fill-level 17s linear infinite;
+      box-shadow: 0 0 100px 0 #0000ff inset,
+        0 0 200px 0 #0000ff inset;
+    }
+
+    @keyframes fill-bubbles {
+      0% {
+        transform: translate3d(-100px, -20px, 0) rotate(0deg)
+      }
+
+      50% {
+        transform: translate3d(100px, -40px, 0) rotate(180deg)
+      }
+
+      100% {
+        transform: translate3d(-100px, -20px, 0) rotate(360deg)
+      }
+    }
+
+    .bubble {
+      content: "";
+      display: inline-block;
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      transform-origin: 50% 50%;
+      transform: rotate(0deg) translate3d(0, 0, 0);
+      box-shadow: 0 0 30px 20px #0000ff inset;
+    }
+
     @for $i from 1 through 8 {
       .bubble:nth-child(#{$i}) {
-        animation : fill-bubbles 3s*(math.div($i, 2)) ease .5s math.div(0.5s, $i) infinite;
+        animation: fill-bubbles 3s*(math.div($i, 2)) ease .5s math.div(0.5s, $i) infinite;
       }
     }
   }

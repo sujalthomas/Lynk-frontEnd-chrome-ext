@@ -1,36 +1,45 @@
 import React, { useState, useRef, useEffect } from 'react';
 import DOMPurify from 'dompurify';
-//import { ToastContainer, toast } from 'react-toastify';
-//import 'react-toastify/dist/ReactToastify.css';
+import './content.styles.css';
+import './content.styles.scss';
+
+
 
 const DownloadButton = () => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [buttonStyle, setButtonStyle] = useState({
-    width: '90px',
-    height: '90px',
-    outline: 'none',
-    border: 'bold',
-    background: 'black',
-    borderRadius: '90px 5px 5px 5px',
-    boxShadow: 'rgba(50, 50, 93, 0.25) 0px 2px 5px -1px, rgba(0, 0, 0, 0.3) 0px 1px 3px -1px',
-    transition: '.2s ease-in-out',
-  });
-  const [iconStyle, setIconStyle] = useState({
-    marginTop: '1.5em',
-    marginLeft: '1.2em',
-    fill: '#cc39a4',
-  });
 
   const headerRef = useRef<HTMLElement | null>(null);
   const jobBodyRef = useRef<HTMLElement | null>(null);
   const employerRef = useRef<HTMLElement | null>(null);
-  //const notify = () => toast("Wow so easy!");
+  const [errorMessage, setErrorMessage] = useState('');
+
+
 
   useEffect(() => {
-    headerRef.current = document.querySelector('.p5');
-    jobBodyRef.current = document.querySelector('.jobs-description__content #job-details');
-    employerRef.current = document.querySelector('.artdeco-card .jobs-poster__name');
+    const observer = new MutationObserver((mutationsList, observer) => {
+      const headerElem = document.querySelector('.p5');
+      const jobBodyElem = document.querySelector('.jobs-description__content #job-details');
+      const employerElem = document.querySelector('.artdeco-card .jobs-poster__name');
+
+      if (headerElem && jobBodyElem) {
+        headerRef.current = headerElem as HTMLElement;
+        jobBodyRef.current = jobBodyElem as HTMLElement;
+
+        // Only set the employerRef if the employerElem is found
+        if (employerElem) {
+          employerRef.current = employerElem as HTMLElement;
+        }
+
+        observer.disconnect(); // Stop observing once the required elements are found
+      }
+    });
+
+    // Start observing the document with the configured parameters
+    observer.observe(document, { childList: true, subtree: true });
+
+    return () => observer.disconnect(); // Cleanup the observer on component unmount
   }, []);
+
+
 
   function sanitizeHTML(html: string): string {
     return DOMPurify.sanitize(html);
@@ -56,21 +65,109 @@ const DownloadButton = () => {
     });
   }
 
-  //resume download
+
+
+
+  const handleCoverDownload = async () => {
+    getDataFromBackground(async (data) => {
+      const { token, apiKey } = data;
+
+      if (!token) {
+        console.log("Token not found in background.");
+        setIsLoading(false);
+        return;
+      }
+
+      if (headerRef.current && jobBodyRef.current) {
+        const headerElem = sanitizeHTML(headerRef.current.outerHTML.trim());
+        const jobBodyElem = sanitizeHTML(jobBodyRef.current.innerHTML.trim());
+        const jobListingElem = `${headerElem}${jobBodyElem}`;
+        const cleanedJobListingElem = jobListingElem.replace(/>\s+</g, '><');
+        const textContent = extractTextFromHtml(cleanedJobListingElem);
+
+        let companyName = getDefaultIfEmpty(document.querySelector('.jobs-unified-top-card__primary-description .app-aware-link')?.textContent?.trim() || '', 'Company');
+        let recruiter = getDefaultIfEmpty((document.querySelector('.artdeco-card .jobs-poster__name') as HTMLElement)?.innerText.trim(), 'Hiring Manager');
+        const date = new Date().toLocaleDateString();
+
+        const postData = {
+          "Company-name": companyName,
+          "Job-Listing": textContent,
+          "Recruiter": recruiter,
+          "Date": date,
+          "apiKey": apiKey,
+          "user_id": token
+        };
+
+        setIsLoading(true);
+
+        try {
+          const response = await fetch('https://lynk.up.railway.app/cover-letter', {
+            method: 'POST',
+            mode: 'cors',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': token
+            },
+            body: JSON.stringify(postData),
+          });
+
+          if (response.status === 404) {
+            const errorMsg = "Resume file not found! 404";
+            console.log(errorMsg);
+            setErrorMessage(errorMsg);
+            return;
+          } else if (response.status >= 500) {
+            const errorMsg = "Check your OpenAI API Key! 500";
+            console.log(errorMsg);
+            // Capture the server error message
+            response.text().then(serverError => {
+              console.log("Server Error:", serverError);
+              setErrorMessage(`${errorMsg}. Server says: ${serverError}`);
+            });
+            return;
+          } else if (!response.ok) {
+            const errorMsg = `HTTP error! Status: ${response.status}`;
+            console.log(errorMsg);
+            // Capture the server error message
+            response.text().then(serverError => {
+              console.log("Error:", serverError);
+              setErrorMessage(`${errorMsg}. Server says: ${serverError}`);
+            });
+            return; // Exit early on error
+          }
+
+
+          console.log("Creating blob and initiating download.");
+          const blob = await response.blob();
+          const blobUrl = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = blobUrl;
+          a.download = `${companyName}_cv.docx`;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+        } catch (error) {
+          console.log('Error:', error);
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    });
+  };
+
+
+
+
   const handleResumeDownload = async () => {
 
     getDataFromBackground(async (data) => {
       const { token, apiKey } = data;
       if (!token) {
-        console.error("Token not found in background.");
+        console.log("Token not found in background.");
+        //toast.error("Enter your API key in the extension popup!", { position: toast.POSITION.TOP_CENTER });
         setIsLoading(false);
         return;
       }
-
-
-      console.log("Token from background:", token);
-      console.log("API Key from background:", apiKey);
-
 
       if (jobBodyRef.current) {
         const jobBodyElem = sanitizeHTML(jobBodyRef.current.innerHTML.trim());
@@ -85,34 +182,44 @@ const DownloadButton = () => {
           "user_id": token
         };
 
-
-        console.log("Post data:", postData);
         setIsLoading(true);
 
-
         try {
-          const response = await fetch('https://flask-lynk-env.up.railway.app/generate-resume', {
+          const response = await fetch('https://lynk.up.railway.app/generate-resume', {
             method: 'POST',
-            mode: 'cors',  // add this line
             headers: {
               'Content-Type': 'application/json',
               'Authorization': token
             },
             body: JSON.stringify(postData),
           });
-          console.log("Fetch request completed.", response);
-
 
           if (response.status === 404) {
-            //toast.error("An error occurred while generating the resume! 404");
-            throw new Error('Resource not found');
+            const errorMsg = "Resume file not found! 404";
+            console.log(errorMsg);
+            setErrorMessage(errorMsg);
+            return;
           } else if (response.status >= 500) {
-            //toast.error("An error occurred while generating the resume! 500");
-            throw new Error('Server error');
+            const errorMsg = "Check your OpenAI API Key! 500";
+            console.log(errorMsg);
+            // Capture the server error message
+            response.text().then(serverError => {
+              console.log("Server Error:", serverError);
+              setErrorMessage(`${errorMsg}. Server says: ${serverError}`);
+            });
+            return;
           } else if (!response.ok) {
-            //toast.error("An error occurred while generating the resume!");
-            throw new Error(`HTTP error! Status: ${response.status}`);
+            const errorMsg = `HTTP error! Status: ${response.status}`;
+            console.log(errorMsg);
+            // Capture the server error message
+            response.text().then(serverError => {
+              console.log("Error:", serverError);
+              setErrorMessage(`${errorMsg}. Server says: ${serverError}`);
+            });
+            return; // Exit early on error
           }
+
+
 
           const blob = await response.blob();
           const blobUrl = window.URL.createObjectURL(blob);
@@ -121,108 +228,34 @@ const DownloadButton = () => {
           a.download = `new_resume.docx`;
           document.body.appendChild(a);
           a.click();
-          console.log("Download should have started.");
           a.remove();
-
         } catch (error) {
           //toast.error("An error occurred while downloading the resume!");
-          console.error('Error:', error);
+          console.log('Error:', error);
         } finally {
           setIsLoading(false);
         }
       }
-    }
-    );
+    });
   }
 
 
-  /// generate cover letter download 
-
-  const handleCoverDownload = async () => {
-
-
-    getDataFromBackground(async (data) => {
-      const { token, apiKey } = data;
-      if (!token) {
-        console.error("Token not found in background.");
-        setIsLoading(false);
-        return;
-      }
-
-
-      console.log("Token from background:", token);
-      console.log("API Key from background:", apiKey);
-
-      if (headerRef.current && jobBodyRef.current) {
-        const headerElem = sanitizeHTML(headerRef.current.outerHTML.trim());
-        const jobBodyElem = sanitizeHTML(jobBodyRef.current.innerHTML.trim());
-        const jobListingElem = `${headerElem}${jobBodyElem}`;
-
-        const cleanedJobListingElem = jobListingElem.replace(/>\s+</g, '><');
-        const textContent = extractTextFromHtml(cleanedJobListingElem);
-
-        let companyName = getDefaultIfEmpty(document.querySelector('.jobs-unified-top-card__primary-description .app-aware-link')?.textContent?.trim() || '', 'Company');
-        let recruiter = getDefaultIfEmpty((document.querySelector('.artdeco-card .jobs-poster__name') as HTMLElement)?.innerText.trim(), 'Hiring Manager');
-        const date = new Date().toLocaleDateString();
-
-        const postData = {
-          "Company-name": companyName,
-          "Job-Listing": textContent,
-          "Recruiter": recruiter,
-          "Date": date,
-          "apiKey": apiKey,  // Include the API key in postData
-          "user_id": token
-        };
-
-        setIsLoading(true);
-
-        console.log("Post data:", postData);
-
-        try {
-          const response = await fetch('https://flask-lynk-env.up.railway.app/cover-letter', {
-            method: 'POST',
-            mode: 'cors',  // add this line
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': token
-            },
-            body: JSON.stringify(postData),
-          });
-          console.log("Fetch request completed.", response);
-
-          if (response.status === 404) {
-            //toast.error("An error occurred while generating the cover letter! 404" , {position: toast.POSITION.TOP_CENTER});
-            throw new Error('Resource not found');
-          } else if (response.status >= 500) {
-            //toast.error("An error occurred while generating the cover letter! 500");
-            throw new Error('Server error');
-          } else if (!response.ok) {
-            //toast.error("An error occurred while generating the cover letter!");
-            throw new Error(`HTTP error! Status: ${response.status}`);
-          }
-
-          console.log("Creating blob and initiating download.");
-          const blob = await response.blob();
-
-          const blobUrl = window.URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = blobUrl;
-          a.download = `${companyName}_cv.docx`;
-          document.body.appendChild(a);
-          a.click();
-          console.log("Download should have started.");
-          a.remove();
-
-        } catch (error) {
-          //toast.error("An error occurred while downloading the cover letter!");
-          console.error('Error:', error);
-        } finally {
-          setIsLoading(false);
-        }
-      }
-    }
-    );
-  }
+  const [isLoading, setIsLoading] = useState(false);
+  const [buttonStyle, setButtonStyle] = useState({
+    width: '90px',
+    height: '90px',
+    outline: 'none',
+    border: 'bold',
+    background: 'black',
+    borderRadius: '90px 5px 5px 5px',
+    boxShadow: 'rgba(50, 50, 93, 0.25) 0px 2px 5px -1px, rgba(0, 0, 0, 0.3) 0px 1px 3px -1px',
+    transition: '.2s ease-in-out',
+  });
+  const [iconStyle, setIconStyle] = useState({
+    marginTop: '1.5em',
+    marginLeft: '1.2em',
+    fill: '#cc39a4',
+  });
 
   const handleMouseEnter = () => {
     setButtonStyle({ ...buttonStyle, background: '#cc39a4' });
@@ -253,11 +286,16 @@ const DownloadButton = () => {
     });
   };
 
+
+
+
   if (!window.location.href.includes("linkedin.com")) return null;
 
   return (
+
     isAuthenticated ? (
       <div className="main" style={{ position: 'fixed', top: '50%', right: '0', transform: 'translateY(-50%)', zIndex: 9999 }}>
+
         <div className="card1" onClick={handleCoverDownload} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
           <div className="icon-container">
             {isLoading ? (
@@ -358,45 +396,126 @@ const DownloadButton = () => {
       </div>
     ) : (
 
+          <div className="main" style={{ position: 'fixed', top: '50%', right: '0', transform: 'translateY(-50%)', zIndex: 9999 }}>
+            <div className="card1" onClick={handleLoginClick} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
 
-      <div className="main" style={{ position: 'fixed', top: '50%', right: '0', transform: 'translateY(-50%)', zIndex: 9999 }}>
-        <div className="card1" onClick={handleLoginClick} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
-          <div className="icon-container">
-            {isLoading ? (
+              <div className="icon-container">
+                {isLoading ? (
 
-              <div>
-                <h1>Generating</h1>
-                {/* Fill */}
-                <svg width={0} height={0}>
-                  <filter id="gooey-fill">
-                    <feGaussianBlur in="SourceGraphic" stdDeviation={20} result="blur" />
-                    <feColorMatrix
-                      in="blur"
-                      mode="matrix"
-                      values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 50 -16"
-                      result="goo"
-                    />
-                  </filter>
-                </svg>
-                <div className="fill">
-                  <div className="gooey-container">
-                    <span className="level">
-                      <span className="bubble" />
-                      <span className="bubble" />
-                      <span className="bubble" />
-                      <span className="bubble" />
-                      <span className="bubble" />
-                      <span className="bubble" />
-                      <span className="bubble" />
-                      <span className="bubble" />
-                    </span>
+                  <div>
+                    <h1>Generating</h1>
+                    {/* Fill */}
+                    <svg width={0} height={0}>
+                      <filter id="gooey-fill">
+                        <feGaussianBlur in="SourceGraphic" stdDeviation={20} result="blur" />
+                        <feColorMatrix
+                          in="blur"
+                          mode="matrix"
+                          values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 50 -16"
+                          result="goo"
+                        />
+                      </filter>
+                    </svg>
+                    <div className="fill">
+                      <div className="gooey-container">
+                        <span className="level">
+                          <span className="bubble" />
+                          <span className="bubble" />
+                          <span className="bubble" />
+                          <span className="bubble" />
+                          <span className="bubble" />
+                          <span className="bubble" />
+                          <span className="bubble" />
+                          <span className="bubble" />
+                        </span>
+                      </div>
+                    </div>
+                    {/*/Fill */}
                   </div>
-                </div>
-                {/*/Fill */}
+
+
+                ) : (
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="60"
+                    height="60"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      fill="#8F9EB6"
+                      d="M63 84H37c-8.284 0-15-6.716-15-15V48a5 5 0 015-5h46a5 5 0 015 5v21c0 8.284-6.716 15-15 15z"
+                      transform="matrix(.2 0 0 .2 12 12) translate(0 13.5) translate(-50 -63.5)"
+                    ></path>
+                    <path
+                      fill="#FCBA7F"
+                      d="M22 51h56v10H22z"
+                      transform="matrix(.2 0 0 .2 12 12) translate(0 6) translate(-50 -56)"
+                    ></path>
+                    <path
+                      fill="#4E6D91"
+                      d="M53.5 77.5l-1.896-7.583a2.5 2.5 0 10-3.208 0L46.5 77.5h7z"
+                      transform="matrix(.2 0 0 .2 12 12) translate(0 21.5) translate(-50 -71.5)"
+                    ></path>
+                    <path
+                      fill="#B3B2C3"
+                      d="M36 42v-6.605c0-7.538 5.793-14.025 13.323-14.379C57.363 20.637 64 27.044 64 35v7.5h7v-6.997c0-11.387-8.854-21.085-20.234-21.49C38.819 13.589 29 23.148 29 35v7h7z"
+                      transform="matrix(.2 0 0 .2 12 12) translate(0 -21.75) translate(-50 -28.25)"
+                    ></path>
+                    <path
+                      fill="#1F212B"
+                      d="M63 85H37c-8.822 0-16-7.178-16-16V48c0-3.309 2.691-6 6-6h46c3.309 0 6 2.691 6 6v21c0 8.822-7.178 16-16 16zM27 44c-2.206 0-4 1.794-4 4v21c0 7.72 6.28 14 14 14h26c7.72 0 14-6.28 14-14V48c0-2.206-1.794-4-4-4H27z"
+                      transform="matrix(.2 0 0 .2 12 12) translate(0 13.5) translate(-50 -63.5)"
+                    ></path>
+                    <path
+                      fill="#1F212B"
+                      d="M72 42.5h-2v-6.997c0-10.92-8.645-20.112-19.27-20.49-5.479-.192-10.678 1.792-14.617 5.594C32.171 24.412 30 29.523 30 35v7h-2v-7c0-6.025 2.388-11.647 6.725-15.832 4.333-4.183 10.055-6.363 16.076-6.154C62.49 13.43 72 23.519 72 35.503V42.5z"
+                      transform="matrix(.2 0 0 .2 12 12) translate(0 -22.25) translate(-50 -27.75)"
+                    ></path>
+                    <path
+                      fill="#1F212B"
+                      d="M65 42.5h-2V35a12.89 12.89 0 00-4.028-9.408c-2.595-2.476-5.989-3.75-9.602-3.577C42.434 22.341 37 28.219 37 35.396V42h-2v-6.604c0-8.247 6.271-15.001 14.276-15.378 4.134-.191 8.08 1.27 11.076 4.128A14.862 14.862 0 0165 35v7.5zM78 52H65.5a.5.5 0 010-1H78a.5.5 0 010 1zm-15.5 0h-5a.5.5 0 010-1h5a.5.5 0 010 1zm-8 0H22a.5.5 0 010-1h32.5a.5.5 0 010 1zM22 60h56v1H22zm31.5 18h-7a.503.503 0 01-.486-.621l1.824-7.297a3 3 0 114.323 0l1.824 7.297A.5.5 0 0153.5 78zm-6.359-1h5.719l-1.74-6.961a.5.5 0 01.164-.504A2.002 2.002 0 0050 66a2.002 2.002 0 00-1.283 3.534c.146.123.21.319.164.504L47.141 77z"
+                      transform="matrix(.2 0 0 .2 12 12) translate(0 -1) translate(-50 -49)"
+                    ></path>
+                    <path
+                      fill="#1F212B"
+                      d="M20.018 55.504h11.446v1H20.018z"
+                      transform="matrix(.2 0 0 .2 12 12) rotate(-55.3 -6.42 26.219) translate(-25.74 -56)"
+                    ></path>
+                    <path
+                      fill="#1F212B"
+                      d="M28.018 55.504h11.446v1H28.018z"
+                      transform="matrix(.2 0 0 .2 12 12) rotate(-55.3 -2.407 18.567) translate(-33.74 -56)"
+                    ></path>
+                    <path
+                      fill="#1F212B"
+                      d="M36.018 55.504h11.446v1H36.018z"
+                      transform="matrix(.2 0 0 .2 12 12) rotate(-55.3 1.606 10.915) translate(-41.74 -56)"
+                    ></path>
+                    <path
+                      fill="#1F212B"
+                      d="M44.018 55.504h11.446v1H44.018z"
+                      transform="matrix(.2 0 0 .2 12 12) rotate(-55.3 5.609 3.258) translate(-49.74 -56)"
+                    ></path>
+                    <path
+                      fill="#1F212B"
+                      d="M52.018 55.504h11.446v1H52.018z"
+                      transform="matrix(.2 0 0 .2 12 12) rotate(-55.3 9.621 -4.394) translate(-57.74 -56)"
+                    ></path>
+                    <path
+                      fill="#1F212B"
+                      d="M60.018 55.504h11.446v1H60.018z"
+                      transform="matrix(.2 0 0 .2 12 12) rotate(-55.3 13.634 -12.046) translate(-65.74 -56)"
+                    ></path>
+                    <path
+                      fill="#1F212B"
+                      d="M68.018 55.504h11.446v1H68.018z"
+                      transform="matrix(.2 0 0 .2 12 12) rotate(-55.3 17.646 -19.698) translate(-73.74 -56)"
+                    ></path>
+                  </svg>
+                )}
               </div>
-
-
-            ) : (
+            </div>
+            <div className="card3" onClick={handleLoginClick}>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="60"
@@ -474,89 +593,8 @@ const DownloadButton = () => {
                   transform="matrix(.2 0 0 .2 12 12) rotate(-55.3 17.646 -19.698) translate(-73.74 -56)"
                 ></path>
               </svg>
-            )}
+            </div>
           </div>
-        </div>
-        <div className="card3" onClick={handleLoginClick}>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="60"
-            height="60"
-            viewBox="0 0 24 24"
-          >
-            <path
-              fill="#8F9EB6"
-              d="M63 84H37c-8.284 0-15-6.716-15-15V48a5 5 0 015-5h46a5 5 0 015 5v21c0 8.284-6.716 15-15 15z"
-              transform="matrix(.2 0 0 .2 12 12) translate(0 13.5) translate(-50 -63.5)"
-            ></path>
-            <path
-              fill="#FCBA7F"
-              d="M22 51h56v10H22z"
-              transform="matrix(.2 0 0 .2 12 12) translate(0 6) translate(-50 -56)"
-            ></path>
-            <path
-              fill="#4E6D91"
-              d="M53.5 77.5l-1.896-7.583a2.5 2.5 0 10-3.208 0L46.5 77.5h7z"
-              transform="matrix(.2 0 0 .2 12 12) translate(0 21.5) translate(-50 -71.5)"
-            ></path>
-            <path
-              fill="#B3B2C3"
-              d="M36 42v-6.605c0-7.538 5.793-14.025 13.323-14.379C57.363 20.637 64 27.044 64 35v7.5h7v-6.997c0-11.387-8.854-21.085-20.234-21.49C38.819 13.589 29 23.148 29 35v7h7z"
-              transform="matrix(.2 0 0 .2 12 12) translate(0 -21.75) translate(-50 -28.25)"
-            ></path>
-            <path
-              fill="#1F212B"
-              d="M63 85H37c-8.822 0-16-7.178-16-16V48c0-3.309 2.691-6 6-6h46c3.309 0 6 2.691 6 6v21c0 8.822-7.178 16-16 16zM27 44c-2.206 0-4 1.794-4 4v21c0 7.72 6.28 14 14 14h26c7.72 0 14-6.28 14-14V48c0-2.206-1.794-4-4-4H27z"
-              transform="matrix(.2 0 0 .2 12 12) translate(0 13.5) translate(-50 -63.5)"
-            ></path>
-            <path
-              fill="#1F212B"
-              d="M72 42.5h-2v-6.997c0-10.92-8.645-20.112-19.27-20.49-5.479-.192-10.678 1.792-14.617 5.594C32.171 24.412 30 29.523 30 35v7h-2v-7c0-6.025 2.388-11.647 6.725-15.832 4.333-4.183 10.055-6.363 16.076-6.154C62.49 13.43 72 23.519 72 35.503V42.5z"
-              transform="matrix(.2 0 0 .2 12 12) translate(0 -22.25) translate(-50 -27.75)"
-            ></path>
-            <path
-              fill="#1F212B"
-              d="M65 42.5h-2V35a12.89 12.89 0 00-4.028-9.408c-2.595-2.476-5.989-3.75-9.602-3.577C42.434 22.341 37 28.219 37 35.396V42h-2v-6.604c0-8.247 6.271-15.001 14.276-15.378 4.134-.191 8.08 1.27 11.076 4.128A14.862 14.862 0 0165 35v7.5zM78 52H65.5a.5.5 0 010-1H78a.5.5 0 010 1zm-15.5 0h-5a.5.5 0 010-1h5a.5.5 0 010 1zm-8 0H22a.5.5 0 010-1h32.5a.5.5 0 010 1zM22 60h56v1H22zm31.5 18h-7a.503.503 0 01-.486-.621l1.824-7.297a3 3 0 114.323 0l1.824 7.297A.5.5 0 0153.5 78zm-6.359-1h5.719l-1.74-6.961a.5.5 0 01.164-.504A2.002 2.002 0 0050 66a2.002 2.002 0 00-1.283 3.534c.146.123.21.319.164.504L47.141 77z"
-              transform="matrix(.2 0 0 .2 12 12) translate(0 -1) translate(-50 -49)"
-            ></path>
-            <path
-              fill="#1F212B"
-              d="M20.018 55.504h11.446v1H20.018z"
-              transform="matrix(.2 0 0 .2 12 12) rotate(-55.3 -6.42 26.219) translate(-25.74 -56)"
-            ></path>
-            <path
-              fill="#1F212B"
-              d="M28.018 55.504h11.446v1H28.018z"
-              transform="matrix(.2 0 0 .2 12 12) rotate(-55.3 -2.407 18.567) translate(-33.74 -56)"
-            ></path>
-            <path
-              fill="#1F212B"
-              d="M36.018 55.504h11.446v1H36.018z"
-              transform="matrix(.2 0 0 .2 12 12) rotate(-55.3 1.606 10.915) translate(-41.74 -56)"
-            ></path>
-            <path
-              fill="#1F212B"
-              d="M44.018 55.504h11.446v1H44.018z"
-              transform="matrix(.2 0 0 .2 12 12) rotate(-55.3 5.609 3.258) translate(-49.74 -56)"
-            ></path>
-            <path
-              fill="#1F212B"
-              d="M52.018 55.504h11.446v1H52.018z"
-              transform="matrix(.2 0 0 .2 12 12) rotate(-55.3 9.621 -4.394) translate(-57.74 -56)"
-            ></path>
-            <path
-              fill="#1F212B"
-              d="M60.018 55.504h11.446v1H60.018z"
-              transform="matrix(.2 0 0 .2 12 12) rotate(-55.3 13.634 -12.046) translate(-65.74 -56)"
-            ></path>
-            <path
-              fill="#1F212B"
-              d="M68.018 55.504h11.446v1H68.018z"
-              transform="matrix(.2 0 0 .2 12 12) rotate(-55.3 17.646 -19.698) translate(-73.74 -56)"
-            ></path>
-          </svg>
-        </div>
-      </div>
     )
   );
 };

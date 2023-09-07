@@ -47,7 +47,7 @@ const Newtab = () => {
     }
 
     try {
-      const response = await fetch('http://127.0.0.1:5000/register', {
+      const response = await fetch('https://lynk.up.railway.app/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -79,7 +79,7 @@ const Newtab = () => {
     }
 
     try {
-      const response = await fetch('http://127.0.0.1:5000/verify', {
+      const response = await fetch('https://lynk.up.railway.app/verify', {
         method: 'POST',
         mode: 'cors',
         headers: {
@@ -110,39 +110,64 @@ const Newtab = () => {
       toast.error("Email is required!");
       return;
     }
+
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailPattern.test(email)) {
       toast.error('Please enter a valid email address.');
       return;
     }
+
     if (!password) {
       toast.error("Password is required!");
       return;
     }
 
     try {
-      const response = await fetch('http://127.0.0.1:5000/login', {
+      const response = await fetch('https://lynk.up.railway.app/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ email, password }),
       });
+
       const data = await response.json();
+
       if (data.success) {
         toast.success('Login successful!');
         chrome.storage.local.set({ authToken: data.token });
+
         chrome.runtime.sendMessage({ type: 'SET_TOKEN', token: data.token }, function (response) {
+          if (chrome.runtime.lastError) {
+            toast.error('Error sending token to background script: ' + chrome.runtime.lastError.message);
+            return;
+          }
+
           if (response.error) {
             toast.error('Error sending token to background script: ' + response.message);
           } else {
-            console.log(response.message);
-            console.log('Token sent to background script.');
+            window.location.href = "https://lynk.up.railway.app/";
           }
-          window.location.href = "http://127.0.0.1:5000/";
         });
       } else {
-        toast.error('Login failed: ' + data.message);
+        // Specific error messages based on backend response
+        switch (response.status) {
+          case 400:
+            toast.error('Login failed: Missing email or password.');
+            break;
+          case 401:
+            toast.error('Login failed: Incorrect email or password.');
+            break;
+          case 403:
+            toast.error('Login failed: Your account is not active. Please verify your email or contact support.');
+            break;
+          case 404:
+            toast.error('Login failed: No account found with this email address. Please sign up or check your email address.');
+            break;
+          default:
+            toast.error('Login failed: ' + data.message);
+            break;
+        }
       }
     } catch (error) {
       toast.error('An error occurred: ' + error.message);
@@ -150,38 +175,7 @@ const Newtab = () => {
   }
 
 
-  async function handlePasswordResetRequest(e) {
-    e.preventDefault();
-    // Input validation
-    if (!email) {
-      toast.error("Email is required!");
-      return;
-    }
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailPattern.test(email)) {
-      toast.error('Please enter a valid email address.');
-      return;
-    }
 
-    try {
-      const response = await fetch('http://127.0.0.1:5000/request-reset-password', {
-        method: 'POST',
-        mode: 'cors',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
-      });
-      const data = await response.json();
-      if (data.success) {
-        toast.success(data.message + ' Please check your email for a reset code.');
-      } else {
-        toast.error('Unable to send you a rest code, verify the entered email!');
-      }
-    } catch (error) {
-      toast.error('An error occurred: ' + error.message);
-    }
-  }
 
 
   async function handlePasswordReset(e) {
@@ -205,7 +199,7 @@ const Newtab = () => {
     }
 
     try {
-      const response = await fetch('http://127.0.0.1:5000/reset-password', {
+      const response = await fetch('https://lynk.up.railway.app/reset-password', {
         method: 'POST',
         mode: 'cors',
         headers: {
@@ -227,6 +221,8 @@ const Newtab = () => {
       toast.error('An error occurred: ' + error.message);
     }
   }
+
+
 
 
 
@@ -351,6 +347,9 @@ const Newtab = () => {
   }, []);
 
 
+
+
+
   return (
     <Router>
       <div className="particleWrapper">
@@ -363,8 +362,9 @@ const Newtab = () => {
             <ToastContainer position="top-center" />
             <div className={`card-switch ${isFlipped ? 'flipped' : ''}`}>
               <label className="switch">
+                <span onClick={handleCardFlip} className="card-side"></span>
                 <span onClick={handleCardFlip} className="slider"></span>
-                <span className="card-side"></span>
+                <span  onClick={handleCardFlip} className="card-side"></span>
                 <div className="flip-card__inner">
                   {
                     showPasswordReset ? (
@@ -474,9 +474,10 @@ const Newtab = () => {
               </label>
             </div>
           </div>
+
         </div>
       </div>
-    </Router>
+    </Router >
   );
 };
 

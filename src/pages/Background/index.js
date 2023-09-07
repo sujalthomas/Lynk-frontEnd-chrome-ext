@@ -28,15 +28,23 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 let storedApiKey = null;   // To store the API Key
 let storedToken = null;    // To store the Token
 
+// Get stored values from storage on start
+chrome.storage.sync.get(['apiKey', 'token'], function (items) {
+  storedApiKey = items.apiKey;
+  storedToken = items.token;
+});
+
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   if (request.type === 'SET_API_KEY') {
-    console.log('Received API key in background script:', request.apiKey);
+    //console.log('Received API key in background script:', request.apiKey);
     storedApiKey = request.apiKey;  // Store the API key
-    console.log('Stored API Key:', storedApiKey);  // Log the stored key for verification
+    chrome.storage.sync.set({ apiKey: storedApiKey }); // Save API key to storage
+    //console.log('Stored API Key:', storedApiKey);  // Log the stored key for verification
     sendResponse({ message: 'API key received successfully!' });
   } else if (request.type === 'SET_TOKEN') {
-    console.log('Received token in background script:', request.token);
+    //console.log('Received token in background script:', request.token);
     storedToken = request.token;    // Store the token
+    chrome.storage.sync.set({ token: storedToken }); // Save token to storage
     sendResponse({ message: 'Token received successfully!' });
   }
   // You can add more conditions here as needed
@@ -44,10 +52,14 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   if (request.type === 'GET_DATA') {
-    sendResponse({ token: storedToken, apiKey: storedApiKey });
+    chrome.storage.sync.get(['apiKey', 'token'], function (items) {
+      sendResponse({ token: items.token, apiKey: items.apiKey });
+    });
+    return true;  // Will respond asynchronously.
   }
   // Handle other message types...
 });
+
 
 
 

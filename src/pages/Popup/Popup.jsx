@@ -110,7 +110,7 @@ const Popup = () => {
     console.log(formData);
 
     try {
-      const response = await fetch('http://127.0.0.1:5000/upload-resume', {
+      const response = await fetch('https://lynk.up.railway.app/upload-resume', {
         method: 'POST',
         body: formData,
       });
@@ -129,25 +129,12 @@ const Popup = () => {
     }
   };
 
-  function getUserIdFromStorage() {
-    return new Promise((resolve, reject) => {
-      chrome.storage.local.get('authToken', function (result) {
-        if (result.authToken) {
-          resolve(result.authToken);
-        } else {
-          reject('No token found in storage.');
-        }
-      });
-    });
-  }
-
-
 
 
   const handleGlobeClick = async (e) => {
     e.preventDefault();
     try {
-      const authResponse = await fetch('http://127.0.0.1:5000/apiverify', {
+      const authResponse = await fetch('https://lynk.up.railway.app/apiverify', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -164,21 +151,84 @@ const Popup = () => {
       } else {
         console.log('Failed to authenticate.');
         toast.error('Failed to authenticate.');
-      }      
+      }
     } catch (error) {
       console.log('Error authenticating:', error);
       alert('Failed to authenticate.');
       setMessage('Failed to authenticate.');
     }
+
   };
+
+
+  async function handleLogout() {
+
+    try {
+
+      // Fetch the token from chrome storage
+      const authToken = await new Promise((resolve, reject) => {
+        chrome.storage.local.get('GET_DATA', (result) => {
+          if (chrome.runtime.lastError) {
+            reject(new Error(chrome.runtime.lastError));
+          } else {
+            resolve(result.authToken);
+          }
+        });
+      });
+
+      // Call backend logout endpoint for clarity (even though it doesn't do much in our simple example)
+      const response = await fetch('https://lynk.up.railway.app/logout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        toast.success('Logout successful!');
+
+        // Remove the auth token from local storage
+        chrome.storage.local.remove('authToken');
+
+        // Redirect the user to the login page or any other page
+        window.location.href = "https://lynk.up.railway.app/";
+      } else {
+        switch (data.message) {
+          case "Invalid or expired token":
+            toast.error('Logout failed: Your session has expired. Please log in again.');
+            break;
+          case "Token missing.":
+            toast.error('Logout failed: Token is missing. Please log in and try again.');
+            break;
+          case "User not found.":
+            toast.error('Logout failed: User not found. Please contact support.');
+            break;
+          case "Token has been blacklisted.":
+            toast.error('Token has been blacklisted. Please log in again.');
+            break;
+          default:
+            toast.error('Logout failed: ' + data.message);
+            break;
+        }
+      }
+    } catch (error) {
+      toast.error('An error occurred: ' + error.message);
+    }
+  }
+
+
+
+
+
 
   useEffect(() => {
     chrome.storage.local.get(['apiKey', 'SET_API_KEY'], result => {
       if (result.apiKey) {
         setApiKey(result.apiKey);
       } else {
-        console.log('No API key found in chrome storage.');
-        toast.error('No API key found in chrome storage.');
+        console.log('No API key found in storage.');
       }
     });
   }, []);
@@ -240,6 +290,17 @@ const Popup = () => {
             <a href="#" onClick={handleGlobeClick}>
               <img src={globeImg} className="icon" alt="external-link" />
             </a>
+
+
+            <button className="logout-btn" href="#" onClick={handleLogout} >
+              <div className="sign">
+                <svg viewBox="0 0 512 512">
+                  <path d="M377.9 105.9L500.7 228.7c7.2 7.2 11.3 17.1 11.3 27.3s-4.1 20.1-11.3 27.3L377.9 406.1c-6.4 6.4-15 9.9-24 9.9c-18.7 0-33.9-15.2-33.9-33.9l0-62.1-128 0c-17.7 0-32-14.3-32-32l0-64c0-17.7 14.3-32 32-32l128 0 0-62.1c0-18.7 15.2-33.9 33.9-33.9c9 0 17.6 3.6 24 9.9zM160 96L96 96c-17.7 0-32 14.3-32 32l0 256c0 17.7 14.3 32 32 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-64 0c-53 0-96-43-96-96L0 128C0 75 43 32 96 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32z" />
+                </svg>
+              </div>
+              <div className="text">Logout</div>
+            </button>
+
           </div>
 
           <div className={`form-group transition-container ${showPassword ? 'js-show-pw eye-open' : 'eye-close'}`}>
