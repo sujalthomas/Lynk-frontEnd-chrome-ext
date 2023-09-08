@@ -88,6 +88,18 @@ const Popup = () => {
 
   }
 
+  function getUserIdFromStorage() {
+    return new Promise((resolve, reject) => {
+      chrome.storage.local.get('authToken', function (result) {
+        if (result.authToken) {
+          resolve(result.authToken);
+        } else {
+          reject('No token found in storage.');
+        }
+      });
+    });
+  }
+
   const handleFileUpload = async (file) => {
     const formData = new FormData();
     formData.append('resume', file);

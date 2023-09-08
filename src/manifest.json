@@ -1,7 +1,9 @@
 {
   "manifest_version": 3,
   "name": "Lynk",
-  "description": "A chrome extension that generates a cover letter based on the job description using GPT-4",
+  "description": "Instantly generate a tailored cover letter using LinkedIn job descriptions and OpenAI API, all within 20 seconds.",
+  "version": "1.0",
+  "author": "Sujal Thomas",
   "options_page": "options.html",
   "background": {
     "service_worker": "background.bundle.js"
