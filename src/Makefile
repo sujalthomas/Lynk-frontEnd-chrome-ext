@@ -41,6 +41,8 @@ postgres-network:
 postgres-run:
 	docker run --name lynk-front -e POSTGRES_USER=admin -e POSTGRES_PASSWORD=root -e POSTGRES_DB=lynk -p 5433:5432 --network=lynk-network -d postgres
 
+#	docker run --name aisaas -e MYSQL_ROOT_PASSWORD=password -e MYSQL_DB=lynk -p 3306:3306 --network=lynk-network -d mysql:latest
+
 postgres-shell:
 	docker exec -it lynk-front psql -U admin -d lynk
 	

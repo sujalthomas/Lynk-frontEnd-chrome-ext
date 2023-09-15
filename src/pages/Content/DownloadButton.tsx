@@ -289,7 +289,7 @@ const DownloadButton = () => {
 
 
 
-  if (!window.location.href.includes("linkedin.com")) return null;
+  if (!window.location.href.includes("linkedin.com/jobs/")) return null;
 
   return (
 
