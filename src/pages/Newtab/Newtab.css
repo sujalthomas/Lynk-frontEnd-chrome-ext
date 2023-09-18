@@ -171,6 +171,20 @@ body {
   transform: rotateY(180deg);
 }
 
+.card-switch.flipped .flip-card__front {
+  pointer-events: none;
+}
+
+
+.flip-card__back {
+  pointer-events: none;
+}
+
+.card-switch.flipped .flip-card__back {
+  pointer-events: auto;
+}
+
+
 .card-side::before,
 .card-side::after {
   position: absolute;
@@ -435,6 +449,15 @@ body {
   justify-content: center;
   align-items: center;
 }
+
+
+
+.flip-card__input[name="confirmPassword"] {
+  z-index: 9999;
+}
+
+
+
 
 .flip-card__back_reset {
   padding: 20px;

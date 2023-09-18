@@ -41,6 +41,9 @@ const Newtab = () => {
       toast.error("Password is required!");
       return;
     }
+    if (!newPassword) {
+      toast.error('Confirm password is required!')
+    }
     if (newPassword !== confirmPassword) {
       toast.error("Passwords do not match!");
       return;
@@ -364,7 +367,7 @@ const Newtab = () => {
               <label className="switch">
                 <span onClick={handleCardFlip} className="card-side"></span>
                 <span onClick={handleCardFlip} className="slider"></span>
-                <span  onClick={handleCardFlip} className="card-side"></span>
+                <span onClick={handleCardFlip} className="card-side"></span>
                 <div className="flip-card__inner">
                   {
                     showPasswordReset ? (
@@ -395,7 +398,6 @@ const Newtab = () => {
                               value={newPassword}
                               onChange={(e) => setNewPassword(e.target.value)}
                             />
-
                             <input
                               type="password"
                               placeholder="Confirm Password"
@@ -404,6 +406,7 @@ const Newtab = () => {
                               value={confirmPassword}
                               onChange={(e) => setConfirmPassword(e.target.value)}
                             />
+
                             <button className="flip-card__btn" onClick={(e) => handlePasswordReset(e)}>Confirm!</button>
                           </form>
                         </div>
@@ -416,7 +419,8 @@ const Newtab = () => {
                           <div className="title">Lynk</div>
                           <form action="" className="flip-card__form">
                             <input type="email" placeholder="Email" name="email" className="flip-card__input" value={email} onChange={(e) => setEmail(e.target.value)} />
-                            <input type="password" placeholder="Password" name="password" className="flip-card__input" value={password} onChange={(e) => setPassword(e.target.value)} /><div className="forgot">
+                            <input type="password" placeholder="Password" name="password" className="flip-card__input" value={password} onChange={(e) => setPassword(e.target.value)} />
+                            <div className="forgot">
                               <span> Forgot password?
                                 <a href="#" onClick={(e) => {
                                   e.preventDefault();
@@ -443,7 +447,6 @@ const Newtab = () => {
                               value={newPassword}
                               onChange={(e) => setNewPassword(e.target.value)}
                             />
-
                             <input
                               type="password"
                               placeholder="Confirm Password"
@@ -482,3 +485,12 @@ const Newtab = () => {
 };
 
 export default Newtab;
+
+
+
+
+
+
+
+
+
