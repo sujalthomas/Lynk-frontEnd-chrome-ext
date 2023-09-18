@@ -17,8 +17,7 @@
     "34": "icon-34.png"
   },
   "permissions": [
-    "storage",
-    "scripting"
+    "storage"
   ],
   "content_scripts": [
     {

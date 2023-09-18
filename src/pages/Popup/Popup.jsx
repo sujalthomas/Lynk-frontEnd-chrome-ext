@@ -158,8 +158,8 @@ const Popup = () => {
       if (authResponse.ok && data.success) {
         const token = data.token;
         await chrome.storage.local.set({ token: token });
-        console.log('Lynk & GPT-4 successfully connected!');
-        toast.success('Lynk & GPT-4 successfully connected!');
+        console.log('Lynk & GPT successfully connected!');
+        toast.success('Lynk & GPT successfully connected!');
       } else {
         console.log('Failed to authenticate.');
         toast.error('Failed to authenticate.');

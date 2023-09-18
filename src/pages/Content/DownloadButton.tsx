@@ -348,9 +348,13 @@ window.addEventListener('load', () => {
   observeDOMChanges();
 });
 
+const url = window.location.href;
 
-
-  if (!window.location.href.includes("linkedin.com/jobs/")) return null;
+if (
+  !(url.includes("linkedin.com/jobs/collections/") || url.includes("linkedin.com/jobs/views/"))
+) {
+  return null;
+}
 
   return (
 
