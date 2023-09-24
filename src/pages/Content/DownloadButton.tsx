@@ -292,69 +292,65 @@ const DownloadButton = () => {
 
 
   // 1. React component for the button
-const QuickApplyButton: React.FC = () => {
-  return (
-<button
-  id="new-apply-button"
-  type="button"
-  className="quick-apply-button"
-  aria-label="Autofill"
-  onClick={handleCoverDownload}
->
-  Generate CV
-</button>
+  const QuickApplyButton: React.FC = () => {
+    return (
+      <button
+        id="new-apply-button"
+        type="button"
+        className="quick-apply-button"
+        aria-label="Autofill"
+        onClick={handleCoverDownload}
+      >
+        Generate CV
+      </button>
 
-  );
-};
+    );
+  };
 
-// 2. Identify the position to inject the button and render it
-const injectButton = () => {
-  // Check if the button is already present
-  const existingButton = document.getElementById('new-apply-button');
-  if (existingButton) return;  // If it exists, do not inject again
+  // 2. Identify the position to inject the button and render it
+  const injectButton = () => {
+    // Check if the button is already present
+    const existingButton = document.getElementById('new-apply-button');
+    if (existingButton) return;  // If it exists, do not inject again
 
-  const targetElement = document.querySelector('.jobs-save-button');
+    const targetElement = document.querySelector('.jobs-save-button');
 
-  if (targetElement) {
-    const div = document.createElement('div');
-    const parentNode = targetElement.parentNode;
-    if (parentNode) {
-      parentNode.insertBefore(div, targetElement.nextSibling);
-      ReactDOM.render(<QuickApplyButton />, div);
-    }
-  }
-};
-
-
-// Use MutationObserver to watch for changes in the DOM
-const observeDOMChanges = () => {
-  const observer = new MutationObserver((mutations) => {
-    mutations.forEach((mutation) => {
-      // Check if our button still exists in the DOM
-      if (!document.getElementById('new-apply-button')) {
-        injectButton();
+    if (targetElement) {
+      const div = document.createElement('div');
+      const parentNode = targetElement.parentNode;
+      if (parentNode) {
+        parentNode.insertBefore(div, targetElement.nextSibling);
+        ReactDOM.render(<QuickApplyButton />, div);
       }
+    }
+  };
+
+
+  // Use MutationObserver to watch for changes in the DOM
+  const observeDOMChanges = () => {
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        // Check if our button still exists in the DOM
+        if (!document.getElementById('new-apply-button')) {
+          injectButton();
+        }
+      });
     });
+
+    observer.observe(document.body, {
+      childList: true, // observe direct children changes
+      subtree: true,   // and lower descendants too
+    });
+  };
+
+  window.addEventListener('load', () => {
+    injectButton();
+    observeDOMChanges();
   });
 
-  observer.observe(document.body, {
-    childList: true, // observe direct children changes
-    subtree: true,   // and lower descendants too
-  });
-};
 
-window.addEventListener('load', () => {
-  injectButton();
-  observeDOMChanges();
-});
+  if (!window.location.href.includes("linkedin.com/jobs/")) return null;
 
-const url = window.location.href;
-
-if (
-  !(url.includes("linkedin.com/jobs/collections/") || url.includes("linkedin.com/jobs/views/"))
-) {
-  return null;
-}
 
   return (
 
