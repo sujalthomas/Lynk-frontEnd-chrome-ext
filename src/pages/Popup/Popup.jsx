@@ -113,7 +113,7 @@ const Popup = () => {
     });
 
     try {
-      const response = await fetch('http://127.0.0.1:3000/upload-resume', {
+      const response = await fetch('https://flask-lynk-env.up.railway.app/upload-resume', {
         method: 'POST',
         body: formData,
       });
@@ -147,7 +147,7 @@ const Popup = () => {
   const handleGlobeClick = async (e) => {
     e.preventDefault();
     // In the authentication request:
-    const authResponse = await fetch('http://127.0.0.1:3000/apiverify', {
+    const authResponse = await fetch('https://flask-lynk-env.up.railway.app/apiverify', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

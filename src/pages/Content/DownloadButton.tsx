@@ -91,7 +91,7 @@ const DownloadButton = () => {
 
 
         try {
-          const response = await fetch('http://127.0.0.1:3000/generate-resume', {
+          const response = await fetch('https://flask-lynk-env.up.railway.app/generate-resume', {
             method: 'POST',
             mode: 'cors',  // add this line
             headers: {
@@ -179,7 +179,7 @@ const DownloadButton = () => {
         console.log("Post data:", postData);
 
         try {
-          const response = await fetch('http://127.0.0.1:3000/cover-letter', {
+          const response = await fetch('https://flask-lynk-env.up.railway.app/cover-letter', {
             method: 'POST',
             mode: 'cors',  // add this line
             headers: {

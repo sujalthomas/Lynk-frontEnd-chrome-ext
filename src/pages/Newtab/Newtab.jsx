@@ -8,6 +8,8 @@ import { BrowserRouter as Router, Route, useParams, Routes } from 'react-router-
 
 const Newtab = () => {
   const [isFlipped, setIsFlipped] = useState(false);
+  const [isLogin, setIsLogin] = useState(true);
+  const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [newPassword, setNewPassword] = useState(''); // Add a state variable for the new password
@@ -32,6 +34,19 @@ const Newtab = () => {
     setIsFlipped(!isFlipped);
   }
 
+/*   function handleLoginClick() {
+    setIsLogin(true);
+    setIsSignUp(false);
+    setIsFlipped(false);
+  }
+
+  function handleSignUpClick() {
+    setIsLogin(false);
+    setIsSignUp(true);
+    setIsFlipped(true);
+  } */
+
+
   async function handleRegistration(e) {
     e.preventDefault();
     // Password and confirmPassword validation
@@ -41,7 +56,7 @@ const Newtab = () => {
     }
 
     try {
-      const response = await fetch('http://127.0.0.1:3000/register', {
+      const response = await fetch('https://flask-lynk-env.up.railway.app/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -64,7 +79,7 @@ const Newtab = () => {
     e.preventDefault();
 
     try {
-      const response = await fetch('http://127.0.0.1:3000/verify', {
+      const response = await fetch('https://flask-lynk-env.up.railway.app/verify', {
         method: 'POST',
         mode: 'cors',
         headers: {
@@ -93,7 +108,7 @@ const Newtab = () => {
     e.preventDefault();
 
     try {
-      const response = await fetch('http://127.0.0.1:3000/login', {
+      const response = await fetch('https://flask-lynk-env.up.railway.app/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -121,7 +136,7 @@ const Newtab = () => {
   async function handlePasswordResetRequest(e) {
     e.preventDefault();
     try {
-      const response = await fetch('http://127.0.0.1:3000/request-reset-password', {
+      const response = await fetch('https://flask-lynk-env.up.railway.app/request-reset-password', {
         method: 'POST',
         mode: 'cors',  // add this line
         headers: {
@@ -159,7 +174,7 @@ const Newtab = () => {
 
     try {
       console.log("Sending password reset request with: ", { email: email, code: otCode, newPassword: newPassword });
-      const response = await fetch('http://127.0.0.1:3000/reset-password', {
+      const response = await fetch('https://flask-lynk-env.up.railway.app/reset-password', {
         method: 'POST',
         mode: 'cors',
         headers: {
