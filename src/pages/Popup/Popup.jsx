@@ -158,8 +158,8 @@ const Popup = () => {
       if (authResponse.ok && data.success) {
         const token = data.token;
         await chrome.storage.local.set({ token: token });
-        console.log('Lynk & GPT successfully connected!');
-        toast.success('Lynk & GPT successfully connected!');
+        console.log('JJ & GPT successfully connected!');
+        toast.success('JJ & GPT successfully connected!');
       } else {
         console.log('Failed to authenticate.');
         toast.error('Failed to authenticate.');
@@ -298,7 +298,7 @@ const Popup = () => {
       {isAuthenticated ? (
         <div className="popup-container">
           <div className="header">
-            <label className="label" htmlFor="api-key">Lynk Chrome Extension</label>
+            <label className="label" htmlFor="api-key">Job Jolt Chrome Extension</label>
             <a href="#" onClick={handleGlobeClick}>
               <img src={globeImg} className="icon" alt="external-link" />
             </a>
@@ -364,7 +364,7 @@ const Popup = () => {
         <form className="form">
           <div className="title">
             <div style={{ display: 'flex', alignItems: 'center' }}>
-              Lynk Tools,
+              Job Jolt,
               <img src={logo} className="logo" alt="external-link" />
             </div>
 

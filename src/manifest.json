@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Lynk",
+  "name": "Job Jolt",
   "description": "Instantly generate a tailored cover letter using LinkedIn job descriptions and OpenAI API, all within 20 seconds.",
   "version": "1.0",
   "author": "Sujal Thomas",
