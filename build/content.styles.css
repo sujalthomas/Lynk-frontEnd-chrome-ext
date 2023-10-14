@@ -160,11 +160,11 @@
   outline: none;
 }
 
-.quick-apply-button + * {
+.quick-apply-button+* {
   margin-left: 15px;
 }
 
-* + .quick-apply-button {
+*+.quick-apply-button {
   margin-left: 15px;
 }
 

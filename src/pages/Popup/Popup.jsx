@@ -205,7 +205,7 @@ const Popup = () => {
         chrome.storage.local.remove('authToken');
 
         // Redirect the user to the login page or any other page
-        window.location.href = "https://lynk.up.railway.app/";
+        window.location.href = "https://job-jolt.vercel.app/";
       } else {
         switch (data.message) {
           case "Invalid or expired token":

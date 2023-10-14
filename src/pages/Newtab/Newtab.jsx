@@ -149,7 +149,7 @@ const Newtab = () => {
           if (response.error) {
             toast.error('Error sending token to background script: ' + response.message);
           } else {
-            window.location.href = "https://lynk.up.railway.app/";
+            window.location.href = "https://job-jolt.vercel.app/";
           }
         });
       } else {
@@ -225,6 +225,28 @@ const Newtab = () => {
     }
   }
 
+  async function handlePasswordResetRequest(e) {
+    e.preventDefault();
+    try {
+      const response = await fetch('https://lynk.up.railway.app/request-reset-password', {
+        method: 'POST',
+        mode: 'cors',  
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        toast.success('Reset code successfully sent to your email');
+
+      } else {
+        toast.error('Reset code not sent to your email' + data.message);
+      }
+    } catch (error) {
+      toast.error('An error occurred: ' + error.message);
+    }
+  }
 
 
 
@@ -416,7 +438,7 @@ const Newtab = () => {
                     ) : (
                       <>
                         <div className="flip-card__front">
-                          <div className="title">Lynk</div>
+                          <div className="title">Job Jolt</div>
                           <form action="" className="flip-card__form">
                             <input type="email" placeholder="Email" name="email" className="flip-card__input" value={email} onChange={(e) => setEmail(e.target.value)} />
                             <input type="password" placeholder="Password" name="password" className="flip-card__input" value={password} onChange={(e) => setPassword(e.target.value)} />

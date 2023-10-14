@@ -1,6 +1,5 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import Newtab from '../Newtab/Newtab';
 
 import Popup from './Popup';
 import './index.css';
