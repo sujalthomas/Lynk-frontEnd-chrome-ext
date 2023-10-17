@@ -4,6 +4,7 @@ import './Popup.scss';
 import globeImg from './globe.png'; // Correct way to import image
 import logo from '../../assets/img/icon-128.png';
 import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 
 const Popup = () => {

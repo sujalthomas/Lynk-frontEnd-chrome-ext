@@ -2,11 +2,12 @@ import React, { useState, useRef, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import DOMPurify from 'dompurify';
 import './content.styles.css';
-import './content.styles.scss';
+
 
 
 
 const DownloadButton = () => {
+
 
   const headerRef = useRef<HTMLElement | null>(null);
   const jobBodyRef = useRef<HTMLElement | null>(null);
@@ -20,15 +21,23 @@ const DownloadButton = () => {
       const headerElem = document.querySelector('.p5');
       const jobBodyElem = document.querySelector('.jobs-description__content #job-details');
       const employerElem = document.querySelector('.artdeco-card .jobs-poster__name');
+      
 
       if (headerElem && jobBodyElem) {
         headerRef.current = headerElem as HTMLElement;
         jobBodyRef.current = jobBodyElem as HTMLElement;
 
+
         // Only set the employerRef if the employerElem is found
         if (employerElem) {
           employerRef.current = employerElem as HTMLElement;
         }
+
+        console.log("Found the required elements!");
+        console.log("headerRef.current:", headerRef.current);
+        console.log("jobBodyRef.current:", jobBodyRef.current);
+        console.log("employerRef.current:", employerRef.current);
+
 
         observer.disconnect(); // Stop observing once the required elements are found
       }
@@ -86,7 +95,7 @@ const DownloadButton = () => {
         const cleanedJobListingElem = jobListingElem.replace(/>\s+</g, '><');
         const textContent = extractTextFromHtml(cleanedJobListingElem);
 
-        let companyName = getDefaultIfEmpty(document.querySelector('.jobs-unified-top-card__primary-description .app-aware-link')?.textContent?.trim() || '', 'Company');
+        let companyName = getDefaultIfEmpty(document.querySelector('.job-details-jobs-unified-top-card__primary-description .app-aware-link')?.textContent?.trim() || '', 'Company');
         let recruiter = getDefaultIfEmpty((document.querySelector('.artdeco-card .jobs-poster__name') as HTMLElement)?.innerText.trim(), 'Hiring Manager');
         const date = new Date().toLocaleDateString();
 
@@ -100,6 +109,8 @@ const DownloadButton = () => {
         };
 
         setIsLoading(true);
+
+        console.log("postData:", postData);
 
         try {
           const response = await fetch('https://lynk.up.railway.app/cover-letter', {
@@ -356,40 +367,60 @@ const DownloadButton = () => {
 
     isAuthenticated ? (
       <>
-        <div className="main" style={{ position: 'fixed', top: '50%', right: '0', transform: 'translateY(-50%)', zIndex: 9999 }}>
+        <div className="main" style={{ position: 'fixed', top: '50%', right: '0', transform: 'translateY(-50%)', zIndex: 1 }}>
 
           <div className="card1" onClick={handleCoverDownload} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
             <div className="icon-container">
               {isLoading ? (
 
                 <div>
-                  <h1>Generating</h1>
+                  <h1 className="generating" style={{ position: 'absolute', bottom: '155%', right: '22%', transform: 'translateY(-50%)', zIndex: 1}}>Generating..</h1>
                   {/* Fill */}
-                  <svg width={0} height={0}>
-                    <filter id="gooey-fill">
-                      <feGaussianBlur in="SourceGraphic" stdDeviation={20} result="blur" />
-                      <feColorMatrix
-                        in="blur"
-                        mode="matrix"
-                        values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 50 -16"
-                        result="goo"
-                      />
-                    </filter>
-                  </svg>
-                  <div className="fill">
-                    <div className="gooey-container">
-                      <span className="level">
-                        <span className="bubble" />
-                        <span className="bubble" />
-                        <span className="bubble" />
-                        <span className="bubble" />
-                        <span className="bubble" />
-                        <span className="bubble" />
-                        <span className="bubble" />
-                        <span className="bubble" />
-                      </span>
+                  <div className="loader" style={{ position: 'fixed', top: '50%', right: '8%', transform: 'translateY(-50%)', zIndex: 1 }}>
+                    <div className="tars">
+                      <div className="container 1">
+                        <div className="shape">
+                          <div className="f" />
+                          <div className="b" />
+                          <div className="l" />
+                          <div className="r" />
+                          <div className="t" />
+                          <div className="bot" />
+                        </div>
+                      </div>
+                      <div className="container 2">
+                        <div className="shape">
+                          <div className="f" />
+                          <div className="b" />
+                          <div className="l" />
+                          <div className="r" />
+                          <div className="t" />
+                          <div className="bot" />
+                        </div>
+                      </div>
+                      <div className="container 3">
+                        <div className="shape">
+                          <div className="f" />
+                          <div className="b" />
+                          <div className="l" />
+                          <div className="r" />
+                          <div className="t" />
+                          <div className="bot" />
+                        </div>
+                      </div>
+                      <div className="container 4">
+                        <div className="shape">
+                          <div className="f" />
+                          <div className="b" />
+                          <div className="l" />
+                          <div className="r" />
+                          <div className="t" />
+                          <div className="bot" />
+                        </div>
+                      </div>
                     </div>
                   </div>
+
                   {/*/Fill */}
                 </div>
 
@@ -463,7 +494,7 @@ const DownloadButton = () => {
 
     ) : (
 
-      <div className="main" style={{ position: 'fixed', top: '50%', right: '0', transform: 'translateY(-50%)', zIndex: 9999 }}>
+      <div className="main" style={{ position: 'fixed', top: '50%', right: '0', transform: 'translateY(-50%)', zIndex: 1 }}>
         <div className="card1" onClick={handleLoginClick} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
 
           <div className="icon-container">
@@ -472,31 +503,51 @@ const DownloadButton = () => {
               <div>
                 <h1>Generating</h1>
                 {/* Fill */}
-                <svg width={0} height={0}>
-                  <filter id="gooey-fill">
-                    <feGaussianBlur in="SourceGraphic" stdDeviation={20} result="blur" />
-                    <feColorMatrix
-                      in="blur"
-                      mode="matrix"
-                      values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 50 -16"
-                      result="goo"
-                    />
-                  </filter>
-                </svg>
-                <div className="fill">
-                  <div className="gooey-container">
-                    <span className="level">
-                      <span className="bubble" />
-                      <span className="bubble" />
-                      <span className="bubble" />
-                      <span className="bubble" />
-                      <span className="bubble" />
-                      <span className="bubble" />
-                      <span className="bubble" />
-                      <span className="bubble" />
-                    </span>
+                <div className="loader">
+                  <div className="tars">
+                    <div className="container 1">
+                      <div className="shape">
+                        <div className="f" />
+                        <div className="b" />
+                        <div className="l" />
+                        <div className="r" />
+                        <div className="t" />
+                        <div className="bot" />
+                      </div>
+                    </div>
+                    <div className="container 2">
+                      <div className="shape">
+                        <div className="f" />
+                        <div className="b" />
+                        <div className="l" />
+                        <div className="r" />
+                        <div className="t" />
+                        <div className="bot" />
+                      </div>
+                    </div>
+                    <div className="container 3">
+                      <div className="shape">
+                        <div className="f" />
+                        <div className="b" />
+                        <div className="l" />
+                        <div className="r" />
+                        <div className="t" />
+                        <div className="bot" />
+                      </div>
+                    </div>
+                    <div className="container 4">
+                      <div className="shape">
+                        <div className="f" />
+                        <div className="b" />
+                        <div className="l" />
+                        <div className="r" />
+                        <div className="t" />
+                        <div className="bot" />
+                      </div>
+                    </div>
                   </div>
                 </div>
+
                 {/*/Fill */}
               </div>
 
