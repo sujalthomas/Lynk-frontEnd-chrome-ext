@@ -370,7 +370,7 @@ const DownloadButton = () => {
         <div className="main" style={{ position: 'fixed', top: '50%', right: '0', transform: 'translateY(-50%)', zIndex: 1 }}>
 
           <div className="card1" onClick={handleCoverDownload} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
-            <div className="icon-container">
+            <div className="icon-mars">
               {isLoading ? (
 
                 <div>
@@ -378,7 +378,7 @@ const DownloadButton = () => {
                   {/* Fill */}
                   <div className="loader" style={{ position: 'fixed', top: '50%', right: '8%', transform: 'translateY(-50%)', zIndex: 1 }}>
                     <div className="tars">
-                      <div className="container 1">
+                      <div className="mars 1">
                         <div className="shape">
                           <div className="f" />
                           <div className="b" />
@@ -388,7 +388,7 @@ const DownloadButton = () => {
                           <div className="bot" />
                         </div>
                       </div>
-                      <div className="container 2">
+                      <div className="mars 2">
                         <div className="shape">
                           <div className="f" />
                           <div className="b" />
@@ -398,7 +398,7 @@ const DownloadButton = () => {
                           <div className="bot" />
                         </div>
                       </div>
-                      <div className="container 3">
+                      <div className="mars 3">
                         <div className="shape">
                           <div className="f" />
                           <div className="b" />
@@ -408,7 +408,7 @@ const DownloadButton = () => {
                           <div className="bot" />
                         </div>
                       </div>
-                      <div className="container 4">
+                      <div className="mars 4">
                         <div className="shape">
                           <div className="f" />
                           <div className="b" />
@@ -497,7 +497,7 @@ const DownloadButton = () => {
       <div className="main" style={{ position: 'fixed', top: '50%', right: '0', transform: 'translateY(-50%)', zIndex: 1 }}>
         <div className="card1" onClick={handleLoginClick} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
 
-          <div className="icon-container">
+          <div className="icon-mars">
             {isLoading ? (
 
               <div>
@@ -505,7 +505,7 @@ const DownloadButton = () => {
                 {/* Fill */}
                 <div className="loader">
                   <div className="tars">
-                    <div className="container 1">
+                    <div className="mars 1">
                       <div className="shape">
                         <div className="f" />
                         <div className="b" />
@@ -515,7 +515,7 @@ const DownloadButton = () => {
                         <div className="bot" />
                       </div>
                     </div>
-                    <div className="container 2">
+                    <div className="mars 2">
                       <div className="shape">
                         <div className="f" />
                         <div className="b" />
@@ -525,7 +525,7 @@ const DownloadButton = () => {
                         <div className="bot" />
                       </div>
                     </div>
-                    <div className="container 3">
+                    <div className="mars 3">
                       <div className="shape">
                         <div className="f" />
                         <div className="b" />
@@ -535,7 +535,7 @@ const DownloadButton = () => {
                         <div className="bot" />
                       </div>
                     </div>
-                    <div className="container 4">
+                    <div className="mars 4">
                       <div className="shape">
                         <div className="f" />
                         <div className="b" />

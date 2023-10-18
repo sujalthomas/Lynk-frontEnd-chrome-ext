@@ -163,19 +163,19 @@
 
 
 
-.container[class*="1"] {
+.mars[class*="1"] {
   animation-delay: 1s;
 }
 
-.container[class*="2"] {
+.mars[class*="2"] {
   animation-delay: 1.3s;
 }
 
-.container[class*="3"] {
+.mars[class*="3"] {
   animation-delay: 1.6s;
 }
 
-.container[class*="4"] {
+.mars[class*="4"] {
   animation-delay: 1.9s;
 }
 
@@ -191,7 +191,7 @@
   animation-delay: 1s;
 }
 
-.container {
+.mars {
   position: relative;
   display: flex;
   width: 100%;
@@ -215,8 +215,8 @@
   text-align: center;
 }
 
-.container:nth-child(2) .f::after,
-.container:nth-child(3) .f::after {
+.mars:nth-child(2) .f::after,
+.mars:nth-child(3) .f::after {
   position: absolute;
   content: '';
   width: 100%;
@@ -231,8 +231,8 @@
   overflow: hidden;
 }
 
-.container:nth-child(2) .f::before,
-.container:nth-child(3) .f::before {
+.mars:nth-child(2) .f::before,
+.mars:nth-child(3) .f::before {
   position: absolute;
   content: '';
   width: 85%;
@@ -246,8 +246,8 @@
   overflow: hidden;
 }
 
-.container:nth-child(1),
-.container:nth-child(4) {
+.mars:nth-child(1),
+.mars:nth-child(4) {
   & .f::before,
   & .r::before,
   & .l::before {
@@ -262,8 +262,8 @@
 }
 }
 
-.container:nth-child(1) .b::before,
-.container:nth-child(4) .b::before {
+.mars:nth-child(1) .b::before,
+.mars:nth-child(4) .b::before {
   position: absolute;
   content: '';
   width: 95%;
