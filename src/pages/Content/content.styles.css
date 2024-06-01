@@ -162,24 +162,19 @@
 
 
 
-
-.mars[class*="1"] {
+.extLoader_mars[class*="1"] {
   animation-delay: 1s;
 }
-
-.mars[class*="2"] {
+.extLoader_mars[class*="2"] {
   animation-delay: 1.3s;
 }
-
-.mars[class*="3"] {
+.extLoader_mars[class*="3"] {
   animation-delay: 1.6s;
 }
-
-.mars[class*="4"] {
+.extLoader_mars[class*="4"] {
   animation-delay: 1.9s;
 }
-
-.tars {
+.extLoader_tars {
   z-index: 0;
   position: absolute;
   height: 100px;
@@ -190,8 +185,7 @@
   animation: rotateX3D 6s ease-in-out infinite;
   animation-delay: 1s;
 }
-
-.mars {
+.extLoader_mars {
   position: relative;
   display: flex;
   width: 100%;
@@ -199,8 +193,7 @@
   transform-style: preserve-3d;
   animation: rotateY3D 3s ease-in infinite both;
 }
-
-.shape {
+.extLoader_shape {
   width: 100%;
   height: 100%;
   transform-style: preserve-3d;
@@ -208,15 +201,13 @@
   z-index: -1;
   background-color: #212121;
 }
-
-.shape div {
+.extLoader_shape div {
   display: block;
   position: absolute;
   text-align: center;
 }
-
-.mars:nth-child(2) .f::after,
-.mars:nth-child(3) .f::after {
+.extLoader_mars:nth-child(2) .extLoader_f::after,
+.extLoader_mars:nth-child(3) .extLoader_f::after {
   position: absolute;
   content: '';
   width: 100%;
@@ -230,9 +221,8 @@
   animation: animMove 2s linear infinite alternate-reverse;
   overflow: hidden;
 }
-
-.mars:nth-child(2) .f::before,
-.mars:nth-child(3) .f::before {
+.extLoader_mars:nth-child(2) .extLoader_f::before,
+.extLoader_mars:nth-child(3) .extLoader_f::before {
   position: absolute;
   content: '';
   width: 85%;
@@ -245,25 +235,23 @@
   border: 2px solid #52c5ff;
   overflow: hidden;
 }
-
-.mars:nth-child(1),
-.mars:nth-child(4) {
-  & .f::before,
-  & .r::before,
-  & .l::before {
+.extLoader_mars:nth-child(1),
+.extLoader_mars:nth-child(4) {
+  & .extLoader_f::before,
+  & .extLoader_r::before,
+  & .extLoader_l::before {
     position: absolute;
-  content: '';
-  width: 95%;
-  height: 5px;
-  left: 0;
-  top: 25%;
-  border: 1px solid #52c5ff;
-  overflow: hidden;
+    content: '';
+    width: 95%;
+    height: 5px;
+    left: 0;
+    top: 25%;
+    border: 1px solid #52c5ff;
+    overflow: hidden;
+  }
 }
-}
-
-.mars:nth-child(1) .b::before,
-.mars:nth-child(4) .b::before {
+.extLoader_mars:nth-child(1) .extLoader_b::before,
+.extLoader_mars:nth-child(4) .extLoader_b::before {
   position: absolute;
   content: '';
   width: 95%;
@@ -275,38 +263,32 @@
   border: 1px solid #52c5ff;
   overflow: hidden;
 }
-
-.f {
+.extLoader_f {
   transform: rotateY(0deg) translateZ(15px);
   border-radius: 2px;
   overflow: hidden;
   transform-style: preserve-3d;
 }
-
-.b {
+.extLoader_b {
   transform: rotateX(180deg) translateZ(15px);
   border-radius: 2px;
 }
-
-.f,.b {
+.extLoader_f, .extLoader_b {
   width: 30px;
   height: 100px;
   background: #212121;
   box-shadow: inset 0 0 0 2px #52c5ff;
   border: 2px solid #52c5ff;
 }
-
-.l {
+.extLoader_l {
   transform: rotateY(-90deg) translateZ(0px);
   border-radius: 2px;
 }
-
-.r {
+.extLoader_r {
   transform: rotateY(90deg) translateZ(-30px);
   border-radius: 2px;
 }
-
-.l,.r {
+.extLoader_l, .extLoader_r {
   width: 30px;
   height: 100px;
   left: 15px;
@@ -316,18 +298,15 @@
   box-shadow: inset 0 0 0 2px #52c5ff;
   border: 2px solid #52c5ff;
 }
-
-.t {
+.extLoader_t {
   transform: rotateX(90deg) translateZ(40px);
   border-radius: 2px;
 }
-
-.bot {
+.extLoader_bot {
   transform: rotateX(-90deg) translateZ(60px);
   border-radius: 2px;
 }
-
-.t,.bot {
+.extLoader_t, .extLoader_bot {
   width: 30px;
   height: 30px;
   top: 25px;
@@ -337,42 +316,33 @@
   box-shadow: inset 0 0 0 2px #52c5ff;
   border: 2px solid #52c5ff;
 }
-
 @keyframes rotateY3D {
   0% {
     transform: translateZ(0px) rotateX(0);
   }
-
   50% {
     transform: translateZ(0px) rotateX(-360deg);
   }
-
   100% {
     transform: translateZ(0px) rotateX(-360deg);
   }
 }
-
 @keyframes rotateX3D {
   0% {
     transform: translateX(0px) rotateY(0);
   }
-
   50% {
     transform: translateX(0px) rotateY(180deg);
   }
-
   100% {
     transform: translateX(0px) rotateY(360deg);
   }
 }
-
 @keyframes animMove {
   0% {
     transform: translateX(20px);
   }
-
   100% {
     transform: translateX(-10px);
   }
 }
-

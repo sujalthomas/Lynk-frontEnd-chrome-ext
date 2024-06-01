@@ -31,7 +31,7 @@ function Options() {
   return (
     <div className='container' style={{ padding: '5px' }}>
       <div className="header">
-        <h1 className="title">Lynk Connect</h1>
+        <h1 className="title">Job Jolt Connect</h1>
         <div className="profile_info" style={{ display: 'flex', justifyContent: 'flex-end' }}>
 
         </div>

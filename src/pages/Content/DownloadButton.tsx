@@ -21,7 +21,7 @@ const DownloadButton = () => {
       const headerElem = document.querySelector('.p5');
       const jobBodyElem = document.querySelector('.jobs-description__content #job-details');
       const employerElem = document.querySelector('.artdeco-card .jobs-poster__name');
-      
+
 
       if (headerElem && jobBodyElem) {
         headerRef.current = headerElem as HTMLElement;
@@ -34,9 +34,6 @@ const DownloadButton = () => {
         }
 
         console.log("Found the required elements!");
-        console.log("headerRef.current:", headerRef.current);
-        console.log("jobBodyRef.current:", jobBodyRef.current);
-        console.log("employerRef.current:", employerRef.current);
 
 
         observer.disconnect(); // Stop observing once the required elements are found
@@ -109,8 +106,6 @@ const DownloadButton = () => {
         };
 
         setIsLoading(true);
-
-        console.log("postData:", postData);
 
         try {
           const response = await fetch('https://lynk.up.railway.app/cover-letter', {
@@ -374,52 +369,53 @@ const DownloadButton = () => {
               {isLoading ? (
 
                 <div>
-                  <h1 className="generating" style={{ position: 'absolute', bottom: '155%', right: '22%', transform: 'translateY(-50%)', zIndex: 1}}>Generating..</h1>
+                  <h1 className="generating" style={{ position: 'absolute', bottom: '155%', right: '22%', transform: 'translateY(-50%)', zIndex: 1 }}>Generating..</h1>
                   {/* Fill */}
-                  <div className="loader" style={{ position: 'fixed', top: '50%', right: '8%', transform: 'translateY(-50%)', zIndex: 1 }}>
-                    <div className="tars">
-                      <div className="mars 1">
-                        <div className="shape">
-                          <div className="f" />
-                          <div className="b" />
-                          <div className="l" />
-                          <div className="r" />
-                          <div className="t" />
-                          <div className="bot" />
+                  <div className="extLoader_loader" style={{ position: 'fixed', top: '50%', right: '8%', transform: 'translateY(-50%)', zIndex: 1 }}>
+                    <div className="extLoader_tars">
+                      <div className="extLoader_mars 1">
+                        <div className="extLoader_shape">
+                          <div className="extLoader_f" />
+                          <div className="extLoader_b" />
+                          <div className="extLoader_l" />
+                          <div className="extLoader_r" />
+                          <div className="extLoader_t" />
+                          <div className="extLoader_bot" />
                         </div>
                       </div>
-                      <div className="mars 2">
-                        <div className="shape">
-                          <div className="f" />
-                          <div className="b" />
-                          <div className="l" />
-                          <div className="r" />
-                          <div className="t" />
-                          <div className="bot" />
+                      <div className="extLoader_mars 2">
+                        <div className="extLoader_shape">
+                          <div className="extLoader_f" />
+                          <div className="extLoader_b" />
+                          <div className="extLoader_l" />
+                          <div className="extLoader_r" />
+                          <div className="extLoader_t" />
+                          <div className="extLoader_bot" />
                         </div>
                       </div>
-                      <div className="mars 3">
-                        <div className="shape">
-                          <div className="f" />
-                          <div className="b" />
-                          <div className="l" />
-                          <div className="r" />
-                          <div className="t" />
-                          <div className="bot" />
+                      <div className="extLoader_mars 3">
+                        <div className="extLoader_shape">
+                          <div className="extLoader_f" />
+                          <div className="extLoader_b" />
+                          <div className="extLoader_l" />
+                          <div className="extLoader_r" />
+                          <div className="extLoader_t" />
+                          <div className="extLoader_bot" />
                         </div>
                       </div>
-                      <div className="mars 4">
-                        <div className="shape">
-                          <div className="f" />
-                          <div className="b" />
-                          <div className="l" />
-                          <div className="r" />
-                          <div className="t" />
-                          <div className="bot" />
+                      <div className="extLoader_mars 4">
+                        <div className="extLoader_shape">
+                          <div className="extLoader_f" />
+                          <div className="extLoader_b" />
+                          <div className="extLoader_l" />
+                          <div className="extLoader_r" />
+                          <div className="extLoader_t" />
+                          <div className="extLoader_bot" />
                         </div>
                       </div>
                     </div>
                   </div>
+
 
                   {/*/Fill */}
                 </div>
@@ -503,46 +499,46 @@ const DownloadButton = () => {
               <div>
                 <h1>Generating</h1>
                 {/* Fill */}
-                <div className="loader">
-                  <div className="tars">
-                    <div className="mars 1">
-                      <div className="shape">
-                        <div className="f" />
-                        <div className="b" />
-                        <div className="l" />
-                        <div className="r" />
-                        <div className="t" />
-                        <div className="bot" />
+                <div className="extLoader_loader" style={{ position: 'fixed', top: '50%', right: '8%', transform: 'translateY(-50%)', zIndex: 1 }}>
+                  <div className="extLoader_tars">
+                    <div className="extLoader_mars 1">
+                      <div className="extLoader_shape">
+                        <div className="extLoader_f" />
+                        <div className="extLoader_b" />
+                        <div className="extLoader_l" />
+                        <div className="extLoader_r" />
+                        <div className="extLoader_t" />
+                        <div className="extLoader_bot" />
                       </div>
                     </div>
-                    <div className="mars 2">
-                      <div className="shape">
-                        <div className="f" />
-                        <div className="b" />
-                        <div className="l" />
-                        <div className="r" />
-                        <div className="t" />
-                        <div className="bot" />
+                    <div className="extLoader_mars 2">
+                      <div className="extLoader_shape">
+                        <div className="extLoader_f" />
+                        <div className="extLoader_b" />
+                        <div className="extLoader_l" />
+                        <div className="extLoader_r" />
+                        <div className="extLoader_t" />
+                        <div className="extLoader_bot" />
                       </div>
                     </div>
-                    <div className="mars 3">
-                      <div className="shape">
-                        <div className="f" />
-                        <div className="b" />
-                        <div className="l" />
-                        <div className="r" />
-                        <div className="t" />
-                        <div className="bot" />
+                    <div className="extLoader_mars 3">
+                      <div className="extLoader_shape">
+                        <div className="extLoader_f" />
+                        <div className="extLoader_b" />
+                        <div className="extLoader_l" />
+                        <div className="extLoader_r" />
+                        <div className="extLoader_t" />
+                        <div className="extLoader_bot" />
                       </div>
                     </div>
-                    <div className="mars 4">
-                      <div className="shape">
-                        <div className="f" />
-                        <div className="b" />
-                        <div className="l" />
-                        <div className="r" />
-                        <div className="t" />
-                        <div className="bot" />
+                    <div className="extLoader_mars 4">
+                      <div className="extLoader_shape">
+                        <div className="extLoader_f" />
+                        <div className="extLoader_b" />
+                        <div className="extLoader_l" />
+                        <div className="extLoader_r" />
+                        <div className="extLoader_t" />
+                        <div className="extLoader_bot" />
                       </div>
                     </div>
                   </div>
